@@ -44,7 +44,7 @@ class ProjectPath:
         tree_dict[name] =[]
         root = os.listdir(path)
         for f in root:
-            if f == ".idea" or f == "__pycache__" or f =="venv" or f == "xlrd2":
+            if f in [".idea","__pycache__","venv",".DS_Store",".git"]:
                 continue
             join_path = os.path.join(path,f)
 
@@ -59,10 +59,10 @@ class ProjectPath:
 
 if __name__ == '__main__':
     pro = ProjectPath()
-    pro.setProjectPath(r"D:\code\excelGenerate","main.py",pro.PyCharm)
+    # print(os.listdir(r"/Applications/Python 3.8/save/pyPyinstaller"))
+    pro.setProjectPath(r"/Applications/Python 3.8/save/pyPyinstaller","main.py",pro.PyCharm)
     t=dict()
     pro.tree(pro.pro_path,t)
     print(t)
-    # print(pro.root_dir)
 
 

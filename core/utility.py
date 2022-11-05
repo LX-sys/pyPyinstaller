@@ -26,17 +26,17 @@ is_system_linux = __system == Linux
 is_system_mac = __system == Mac
 
 
-# 返回当前系统名称
-def currentSystemName():
+# 修正路径,并返回
+def correctionPath(path:str)->str:
     if is_system_mac:
-        return Mac
-    if is_system_linux:
-        return Linux
+        if "\\" in path:
+            return path.replace("\\","/")
+
     if is_system_win:
-        return Windows
+        if "/" in path:
+            return path.replace("/","\\")
 
-
-print(currentSystemName())
+    return path
 
 def Path(*args):
     return os.path.join(RootPath,*args)

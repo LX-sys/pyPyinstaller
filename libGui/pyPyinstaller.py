@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (
     QTextBrowser
 )
 
-from core.utility import Path
+from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
 
 class PyPyinstaller(QMainWindow):
     def __init__(self,*args,**kwargs):
@@ -35,6 +35,18 @@ class PyPyinstaller(QMainWindow):
         self.coreWin.setObjectName("coreWin")
         self.setCentralWidget(self.coreWin)
         self.resize(1200,800)
+
+        # ---- 打包信息
+        self.page_info = {
+            "project_path": "",  # 项目路径
+            "environment_name": "虚拟环境",  # 打包环境
+            "interpreter_path": "",  # 解释器路径
+            "is_win": True,  # 是否带终端窗口
+            "is_one_app": True,  # 是否打包成单一程序
+            "op_sys": "",  # 选择的操作系统
+            "app_name": "main"  # 程序的名称
+        }
+
 
         # 多窗口
         self.st = QStackedWidget()
@@ -116,6 +128,7 @@ background-color:#272727;
 #textBrowser_checkinfo{
 background-color:#000;
 color:#fff;
+font: 15pt "等线";
 }
 '''
         )
@@ -125,17 +138,6 @@ color:#fff;
         self.setTitle("Py项目打包程序")
         self.st.setCurrentIndex(0)
         self.leftStyleTrack(0)
-
-        # ---- 打包信息
-        self.page_info = {
-            "project_path":"", # 项目路径
-            "environment_name":"虚拟环境", # 打包环境
-            "interpreter_path":"",  # 解释器路径
-            "is_win":True, # 是否带终端窗口
-            "is_one_app":True, # 是否打包成单一程序
-            "op_sys":"Win", # 选择的操作系统
-            "app_name":"main" # 程序的名称
-        }
 
     def setTitle(self,text:str):
         self.title.setText(text)
@@ -293,10 +295,19 @@ color:#254f72;
         self.ra_win.setGeometry(40,50,80,30)
         self.ra_mac = QRadioButton("Mac",self.sys_box)
         self.ra_mac.setGeometry(260,50,80,30)
-        self.ra_win.setChecked(True)
+
+        self.ra_mac.setEnabled(False)
+        self.ra_win.setEnabled(False)
+
+        # 根据系统来决定
+        if is_system_win:
+            self.ra_win.setChecked(True)
+            self.page_info["op_sys"] = Windows
+        if is_system_mac:
+            self.ra_mac.setChecked(True)
+            self.page_info["op_sys"] = Mac
 
         # ------
-
         self.next_p_0 = QPushButton("下一步",self.st_win_1)
         self.next_p_0.setObjectName("next_p_1")
         self.next_p_0.setGeometry(800,530,100,30)
@@ -334,18 +345,23 @@ color:#254f72;
     # 打开项目目录
     def open_pro_dir_event(self):
         directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
-        if "/" in directory_path:
-            directory_path=directory_path.replace("/","\\")
+        directory_path = correctionPath(directory_path) # 修正路径
         self.pro_path.setText(directory_path)
         self.page_info["project_path"]=directory_path
 
         # 选择目录的同时,简单查找一下解释器路径
         if self.ra_venv.isChecked():
-            interpreter_path = os.path.join(directory_path,"venv","Scripts","python.exe")
+            if is_system_win:
+                interpreter_path = os.path.join(directory_path,"venv","Scripts","python.exe")
+            elif is_system_mac:
+                interpreter_path = os.path.join(directory_path, "venv", "bin", "python")
+
+            interpreter_path = correctionPath(interpreter_path)
+
             if os.path.isfile(interpreter_path):
                 self.venv_path.setText(interpreter_path)
-
                 self.page_info["interpreter_path"]=interpreter_path
+                self.venv_path.setEnabled(True)
         print(self.page_info)
 
     # 选择解释器
@@ -358,55 +374,67 @@ color:#254f72;
 
     # 检测事件
     def detection_event(self):
+        self.textBrowser_checkinfo.clear() # 清屏
         # 检测项目目录
-        if os.path.isdir(self.page_info["project_path"]):
-            self.outDetection("项目目录:{}".format(self.page_info["project_path"]))
+        if os.path.isdir(self.pro_path.text()):
+            self.outDetection("项目目录: {}".format(self.pro_path.text()))
         else:
-            self.outDetection("项目目录不存在:{}".format(self.page_info["project_path"]))
+            self.outDetection("项目目录: {}".format(self.pro_path.text()))
 
         # 检测虚拟环境
-        if os.path.isfile(self.page_info["interpreter_path"]):
-            self.outDetection("虚拟环境:{}".format(self.page_info["interpreter_path"]))
+        venv_path = self.venv_path.text() # 虚拟环境路径
+        if os.path.isfile(venv_path):
+            self.outDetection("虚拟环境: {}".format(venv_path))
         else:
-            self.outDetection("虚拟环境:不存在")
+            self.outDetection("虚拟环境: 不存在")
 
         # 检测python 版本
         try:
-            po = subprocess.Popen("{} -V".format(self.page_info["interpreter_path"]),
-                                 stdout=subprocess.PIPE)
-            python_v=po.communicate()[0].decode("utf-8")
-            python_v = python_v.replace("\r\n","")
-            self.outDetection("虚拟环境python版本:{}".format(python_v))
+            po = subprocess.Popen("'{}' -V".format(venv_path),
+                                  stdout=subprocess.PIPE,
+                                  shell=True)
+            python_v = po.communicate()[0].decode("utf-8")
+            if is_system_win:
+                python_v = python_v.replace("\r\n","")
+            if is_system_mac:
+                python_v = python_v.replace("\n", "")
+            self.outDetection("虚拟环境python版本: {}".format(python_v))
         except Exception as e:
             print(e)
-            self.outDetection("虚拟环境python版本:没有python")
+            self.outDetection("虚拟环境python版本: 没有python")
 
         # 检测pyinstaller有没有安装
         try:
-            pyin = subprocess.Popen("{} -m pip list".format(self.page_info["interpreter_path"]),stdout=subprocess.PIPE)
+            pyin = subprocess.Popen("'{}' -m pip list".format(self.venv_path.text()),
+                                    stdout=subprocess.PIPE,
+                                    shell=True)
             piplist = pyin.communicate()[0].decode("utf-8")
-            piplist = piplist.split("\r\n")
+            if is_system_win:
+                piplist = piplist.split("\r\n")
+            if is_system_mac:
+                piplist = piplist.split("\n")
             is_pyinstaller = False
             for module_name in piplist[3:]:
                 if "pyinstaller" in module_name:
-                    self.outDetection("pyinstaller是否安装:已安装")
+                    self.outDetection("pyinstaller是否安装: 已安装")
                     is_pyinstaller = True
                     break
             if is_pyinstaller is False:
-                self.outDetection("pyinstaller是否安装:没有安装,请安装 pip install pyinstaller")
+                self.outDetection("pyinstaller是否安装: 没有安装,请安装 pip install pyinstaller")
         except:
-            self.outDetection("pyinstaller是否安装:没有找到python")
+            self.outDetection("pyinstaller是否安装: 没有找到python")
 
         # 终端窗口
-        self.outDetection("是否需要终端窗口:{}".format("需要" if self.page_info["is_win"] else "不需要"))
+        self.outDetection("是否需要终端窗口: {}".format("需要" if self.page_info["is_win"] else "不需要"))
 
         # 打包生成方法
-        self.outDetection("打包生成方法:{}".format("生成单一程序" if self.page_info["is_one_app"] else "包含其他文件"))
+        self.outDetection("打包生成方法: {}".format("生成单一程序" if self.page_info["is_one_app"] else "包含其他文件"))
 
         # 操作系统
-        self.outDetection("操作系统:{}".format(self.page_info["op_sys"]))
+        self.outDetection("操作系统: {}".format(self.page_info["op_sys"]))
         # 打包程序名称
-        self.outDetection("可执行程序名称:{}".format(self.page_info["app_name"]))
+        self.page_info["app_name"] = self.line_app_name.text()
+        self.outDetection("可执行程序名称: {}".format(self.page_info["app_name"]))
 
     # 是否需要终端窗口事件
     def win_bobox_event(self,i):
@@ -431,6 +459,8 @@ color:#254f72;
 
         self.open_dir.clicked.connect(self.open_pro_dir_event)
         self.venv_path_open_dir.clicked.connect(self.open_interpreter_event)
+
+        #
 
         # 检测
         self.detection_btn.clicked.connect(self.detection_event)
