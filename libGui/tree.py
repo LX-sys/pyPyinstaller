@@ -1,10 +1,12 @@
 
 import sys
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
     QTreeWidget,
     QTreeWidgetItem,
+    QTreeWidgetItemIterator
 )
 from core.projectAnalysis.projectPath import ProjectPath
 
@@ -14,6 +16,7 @@ class Tree(QTreeWidget):
     def __init__(self,*args,**kwargs):
         super(Tree, self).__init__(*args,**kwargs)
 
+        self.setObjectName("tree")
         pro = ProjectPath()
         pro.setProjectPath(r"/Applications/Python 3.8/save/pyPyinstaller", "main.py", pro.PyCharm)
         t = dict()
@@ -23,6 +26,7 @@ class Tree(QTreeWidget):
         self.createTree(t)
 
         self.myEvent()
+        # self.getStateFile()
 
     # 创建项目目录
     def createTree(self,tree:dict,praret=None):
@@ -46,9 +50,33 @@ class Tree(QTreeWidget):
                     file_item.setCheckState(0, False)
                     r_item.addChild(file_item)
 
+    # 勾选文件事件
     def checkState_event(self,item:QTreeWidgetItem):
-        print(item.text(0),"-->",item.checkState(0))
-        print(item.childCount())
+        count = item.childCount()
+        if item.checkState(0):
+            for i in range(count):
+                item.child(i).setCheckState(0,Qt.Checked)
+        else:
+            for i in range(count):
+                item.child(i).setCheckState(0, Qt.Unchecked)
+
+    # 获取所有勾选的文件
+    def getStateFile(self,count_=None,litem=None):
+        print(self.topLevelItemCount())
+        print(self.topLevelItem(0).childCount())
+        print(self.topLevelItem(0).child(0).child(0).childCount())
+
+        # print(self.selectedItems())
+        if count_ is None:
+            count = self.topLevelItemCount()
+        else:
+            count = count_
+        for i in range(count):
+            if count_ is None:
+                self.getStateFile(self.topLevelItem(i).childCount())
+            else:
+                print("Dsa")
+
 
     def myEvent(self):
         self.itemClicked.connect(self.checkState_event)

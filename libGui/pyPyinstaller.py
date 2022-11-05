@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QTextBrowser
 )
-
+from libGui.tree import Tree
 from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
 
 class PyPyinstaller(QMainWindow):
@@ -47,15 +47,17 @@ class PyPyinstaller(QMainWindow):
             "app_name": "main"  # 程序的名称
         }
 
-
         # 多窗口
         self.st = QStackedWidget()
         self.st_win_1 = QWidget()
         self.st_win_1.setObjectName("st_win_1")
         self.st_win_2 = QWidget()
         self.st_win_2.setObjectName("st_win_2")
+        self.st_win_3 = QWidget()
+        self.st_win_3.setObjectName("st_win_3")
         self.st.addWidget(self.st_win_1)
         self.st.addWidget(self.st_win_2)
+        self.st.addWidget(self.st_win_3)
 
         self.initLayout()
         self.setStyleSheet(
@@ -89,7 +91,7 @@ font: 17pt "等线";
 background-color:#ffdf76;
 color:#254f72;
 }*/
-#st_win_1,#st_win_2{
+#st_win_1,#st_win_2,#st_win_3{
 background-color:#ffdf76;
 }
 QGroupBox{
@@ -106,12 +108,12 @@ QComboBox QAbstractItemView{
 color:#254f72;
 background: transparent;
 }
-#next_p_1,#next_p_2{
+#next_p_1,#next_p_1,#next_p_2{
 border:1px solid #00aa00;
 background-color:#00aa00;
 color:#fff;
 }
-#next_p_1:hover,#next_p_2:hover{
+#next_p_1:hover,#next_p_1:hover,#next_p_2:hover{
 border:1px solid #00aa00;
 background-color:#005500;
 color:#fff;
@@ -220,6 +222,7 @@ font: 15pt "等线";
         # ---
         self.win1()
         self.win2()
+        self.win3()
 
     # 左侧样式跟随
     def leftStyleTrack(self,i):
@@ -325,11 +328,36 @@ color:#254f72;
 
         # 上一步/下一步
         self.up_1 = QPushButton("上一步",self.st_win_2)
-        self.next_p_2 = QPushButton("下一步",self.st_win_2)
+        self.next_p_1 = QPushButton("下一步",self.st_win_2)
         self.up_1.setObjectName("up_1")
-        self.next_p_2.setObjectName("next_p_2")
+        self.next_p_1.setObjectName("next_p_1")
         self.up_1.setGeometry(650,30,120,40)
-        self.next_p_2.setGeometry(780,30,120,40)
+        self.next_p_1.setGeometry(780,30,120,40)
+
+    # 选择打包资源
+    def win3(self):
+        # 数
+        self.tree = Tree()
+        self.tree_right = QWidget()
+        self.tree_right.setObjectName("tree_right")
+        self.tree.setMinimumWidth(500)
+        self.tree.setMaximumWidth(500)
+
+        self.tree_box = QHBoxLayout(self.st_win_3)
+        self.tree_box.setContentsMargins(0,0,0,0)
+
+        self.tree_box.addWidget(self.tree)
+        self.tree_box.addWidget(self.tree_right)
+
+        # 上一步/下一步
+        self.up_2 = QPushButton("上一步",self.tree_right)
+        self.next_p_2 = QPushButton("下一步",self.tree_right)
+        self.up_2.setObjectName("up_2")
+        self.next_p_2.setObjectName("next_p_2")
+
+        self.up_2.setGeometry(160,540,120,40)
+        self.next_p_2.setGeometry(300,540,120,40)
+
 
     # 输出到检测界面
     def outDetection(self,text):
@@ -454,13 +482,16 @@ color:#254f72;
     def myEvent(self):
         self.next_p_0.clicked.connect(lambda :self.next_event(1))
 
-        # 上一步 -- 第二页
+        # 第二页 -- 上一步/下一步
         self.up_1.clicked.connect(lambda :self.next_event(0))
+        self.next_p_1.clicked.connect(lambda :self.next_event(2))
 
         self.open_dir.clicked.connect(self.open_pro_dir_event)
         self.venv_path_open_dir.clicked.connect(self.open_interpreter_event)
 
-        #
+        # 第三页 -- 上一步/下一步
+        self.up_2.clicked.connect(lambda: self.next_event(1))
+        self.next_p_2.clicked.connect(lambda: self.next_event(3))
 
         # 检测
         self.detection_btn.clicked.connect(self.detection_event)
