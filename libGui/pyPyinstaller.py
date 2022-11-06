@@ -98,7 +98,7 @@ QGroupBox{
 border:1px solid #254f72;
 font: 10pt "等线";
 }
-#open_dir,#venv_path_open_dir{
+#open_dir,#venv_path_open_dir,#btn_entrance{
 background-color:#ffdf76;
 }
 QComboBox{
@@ -131,6 +131,9 @@ background-color:#272727;
 background-color:#000;
 color:#fff;
 font: 15pt "等线";
+}
+#label_entrance{
+color:red;
 }
 '''
         )
@@ -289,6 +292,17 @@ color:#254f72;
         self.win_program.addItem("打包成单一程序")
         self.win_program.addItem("包含文件夹")
 
+        self.label_entrance = QLabel("程序入口文件路径(这个路径直接决定你的程序是否能正常运行)*",self.pro_info)
+        self.label_entrance.setGeometry(10,120,380,30)
+        self.line_entrance = QLineEdit(self.pro_info)
+        self.line_entrance.setGeometry(10,160,380,30)
+        self.btn_entrance = QPushButton("...",self.pro_info)
+        self.btn_entrance.setGeometry(390,160,40,30)
+        self.label_entrance.setObjectName("label_entrance")
+        self.line_entrance.setObjectName("line_entrance")
+        self.btn_entrance.setObjectName("btn_entrance")
+
+
         # -------操作系统
         self.sys_box = QGroupBox(self.st_win_1)
         self.sys_box.setTitle("操作系统")
@@ -400,6 +414,13 @@ color:#254f72;
             self.venv_path.setText(path)
             self.page_info["interpreter_path"]=path
 
+    # 选择程序入口文件
+    def choose_entrance_file_event(self):
+        path = QFileDialog.getOpenFileName(self, caption="选择程序入口文件")
+        if path:
+            path = path[0]
+            self.line_entrance.setText(path)
+
     # 检测事件
     def detection_event(self):
         self.textBrowser_checkinfo.clear() # 清屏
@@ -408,6 +429,12 @@ color:#254f72;
             self.outDetection("项目目录: {}".format(self.pro_path.text()))
         else:
             self.outDetection("项目目录: {}".format(self.pro_path.text()))
+
+        # 检测程序入口文件
+        if os.path.isfile(self.line_entrance.text()):
+            self.outDetection("程序入口文件路径:{}".format(self.line_entrance.text()))
+        else:
+            self.outDetection("程序入口文件路径:不存在")
 
         # 检测虚拟环境
         venv_path = self.venv_path.text() # 虚拟环境路径
@@ -486,8 +513,10 @@ color:#254f72;
         self.up_1.clicked.connect(lambda :self.next_event(0))
         self.next_p_1.clicked.connect(lambda :self.next_event(2))
 
+        # 打开目录
         self.open_dir.clicked.connect(self.open_pro_dir_event)
         self.venv_path_open_dir.clicked.connect(self.open_interpreter_event)
+        self.btn_entrance.clicked.connect(self.choose_entrance_file_event)
 
         # 第三页 -- 上一步/下一步
         self.up_2.clicked.connect(lambda: self.next_event(1))
@@ -515,3 +544,5 @@ if __name__ == '__main__':
     win.show()
 
     sys.exit(app.exec_())
+
+
