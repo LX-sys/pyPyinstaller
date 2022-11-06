@@ -1,20 +1,24 @@
 
 import sys
 import copy
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication,
-    QWidget,
     QTreeWidget,
     QTreeWidgetItem,
-    QTreeWidgetItemIterator
 )
 from core.utility import is_system_win,is_system_mac
 from core.projectAnalysis.projectPath import ProjectPath
 
+'''
+    Tree带选择框
+'''
 
 
 class Tree(QTreeWidget):
+    # 所有选中项字典信号
+    treeCheckStateListed = pyqtSignal(list)
+
     def __init__(self,*args,**kwargs):
         super(Tree, self).__init__(*args,**kwargs)
 
@@ -36,8 +40,6 @@ class Tree(QTreeWidget):
         self.createTree(t)
 
         self.myEvent()
-        # self.getStateFile()
-        # self.allState()
 
     # 创建项目目录
     def createTree(self,tree:dict,praret=None):
@@ -61,10 +63,16 @@ class Tree(QTreeWidget):
                     file_item.setCheckState(0, Qt.Unchecked)
                     r_item.addChild(file_item)
 
+    # 更新树
+    def updateTree(self,tree:dict,praret=None):
+        # 创建树之前,先清空,避免出现意外
+        self.clear()
+        self.checkState_paths.clear()
+        self.createTree(tree,praret)
+
     # 勾选文件事件
     def checkState_event(self,item:QTreeWidgetItem):
         checkState =Qt.Checked if item.checkState(0) else Qt.Unchecked
-
 
         items = self.getItem(item)
         # 路径列表
@@ -87,8 +95,6 @@ class Tree(QTreeWidget):
                 self.checkState_paths.append(q_path)
         else:
             cu_text = item.text(0)
-            # print(cu_text)
-            # print("取消:",imperfect_paths)
             if "." not in cu_text:
                 for t in imperfect_paths:
                     if cu_text in t:
@@ -106,8 +112,7 @@ class Tree(QTreeWidget):
 
         # 最终路径列表
         print(self.checkState_paths)
-
-
+        self.treeCheckStateListed.emit(self.checkState_paths)
 
     # 返回当前对象下面的项
     def getItem(self,item):
@@ -138,13 +143,12 @@ class Tree(QTreeWidget):
             root = self.getItem(self)
         else:
             root = item
-        # print(root)
+
         for i in root:
             cur_text = i.text(0)  # 当前文件名
             if i.checkState(0):
                 part_path = path+self.separator+cur_text  # 部分路径
                 if "." in cur_text: # 路径完整
-                    # print("文件:",part_path)
                     flag = True
                     for p in self.checkState_paths:  # 判定路径是否存在
                         if part_path in p:
@@ -153,9 +157,6 @@ class Tree(QTreeWidget):
                     if flag:
                         self.checkState_paths.append(part_path)
                 else:
-                    # path =path
-                    # print("文件夹",part_path)
-                    # checkState_paths.append(part_path)
                     self.getStateFile(self.getItem(i),part_path)
         return copy.copy(self.checkState_paths)  # 这里必须返回copy,不能直接返回
 
