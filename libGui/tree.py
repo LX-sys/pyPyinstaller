@@ -118,10 +118,7 @@ class Tree(QTreeWidget):
 
     # 返回当前对象下面的项
     def getItemText(self,item):
-        if type(item) == Tree:
-            return [item.topLevelItem(i).text(0) for i in range(item.topLevelItemCount())]
-        elif item.parent() is None or type(item.parent()) is QTreeWidgetItem:
-            return [item.child(i).text(0) for i in range(item.childCount())]
+        return [i.text(0) for i in self.getItem(item)]
 
     # 选择父目录时,同时选择所有/取消子目录
     def allState(self,item:QTreeWidgetItem=None,checkState=Qt.Checked):
