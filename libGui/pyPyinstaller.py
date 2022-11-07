@@ -24,8 +24,10 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QFileDialog,
     QTextBrowser,
-    QMessageBox
+    QMessageBox,
+    QProgressBar
 )
+from core.utility import Path,path_to_unified
 from libGui.tree import Tree
 from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
 
@@ -59,9 +61,12 @@ class PyPyinstaller(QMainWindow):
         self.st_win_2.setObjectName("st_win_2")
         self.st_win_3 = QWidget()
         self.st_win_3.setObjectName("st_win_3")
+        self.st_win_4 = QWidget()
+        self.st_win_4.setObjectName("st_win_4")
         self.st.addWidget(self.st_win_1)
         self.st.addWidget(self.st_win_2)
         self.st.addWidget(self.st_win_3)
+        self.st.addWidget(self.st_win_4)
 
         self.initLayout()
         self.setStyleSheet(
@@ -95,7 +100,7 @@ font: 17pt "等线";
 background-color:#ffdf76;
 color:#254f72;
 }*/
-#st_win_1,#st_win_2,#st_win_3{
+#st_win_1,#st_win_2,#st_win_3,#st_win_4{
 background-color:#ffdf76;
 }
 QGroupBox{
@@ -112,12 +117,12 @@ QComboBox QAbstractItemView{
 color:#254f72;
 background: transparent;
 }
-#next_p_1,#next_p_1,#next_p_2{
+#next_p_1,#next_p_1,#next_p_2,#next_p_3{
 border:1px solid #00aa00;
 background-color:#00aa00;
 color:#fff;
 }
-#next_p_1:hover,#next_p_1:hover,#next_p_2:hover{
+#next_p_1:hover,#next_p_1:hover,#next_p_2:hover,#next_p_3:hover{
 border:1px solid #00aa00;
 background-color:#005500;
 color:#fff;
@@ -230,6 +235,7 @@ color:red;
         self.win1()
         self.win2()
         self.win3()
+        self.win4()
 
     # 左侧样式跟随
     def leftStyleTrack(self,i):
@@ -378,6 +384,27 @@ color:#254f72;
         self.up_2.setGeometry(160,540,120,40)
         self.next_p_2.setGeometry(300,540,120,40)
 
+    # 打开打包
+    def win4(self):
+        self.page_py = QPushButton("打包",self.st_win_4)
+        self.page_py.setObjectName("page_py")
+        self.page_py.setGeometry(40,40,130,50)
+        self.page_progressBar = QProgressBar(self.st_win_4) # 进度条
+        self.page_progressBar.setObjectName("page_progressBar")
+        self.page_progressBar.setGeometry(40,100,850,30)
+        self.page_progressBar.setValue(50)
+        self.page_process = QTextBrowser(self.st_win_4)
+        self.page_process.setObjectName("page_process")
+        self.page_process.setGeometry(40,140,850,450)
+
+        # 上一步/下一步
+        self.up_3 = QPushButton("上一步",self.st_win_4)
+        self.up_3.setObjectName("up_3")
+        self.up_3.setGeometry(650,40,120,40)
+        self.next_p_3 = QPushButton("下一步",self.st_win_4)
+        self.next_p_3.setObjectName("next_p_3")
+        self.next_p_3.setGeometry(800,40,120,40)
+
     # 输出到检测界面
     def outDetection(self,text):
         self.textBrowser_checkinfo.append(text)
@@ -412,6 +439,10 @@ background-color:#272727;
 
         if i == 2 and direction == "next":
             self.tree.openTree(self.pro_path.text())
+
+        if i == 3 and direction == "next":
+            pass
+
         self.st.setCurrentIndex(i)
         self.leftStyleTrack(i)
 
@@ -457,7 +488,7 @@ background-color:#272727;
     def choose_entrance_file_event(self):
         path = QFileDialog.getOpenFileName(self, caption="选择程序入口文件")
         if path:
-            path = path[0]
+            path = correctionPath(path[0])  # 修正
             self.line_entrance.setText(path)
 
     # 检测事件
@@ -589,6 +620,27 @@ background-color:#c12020;
         elif i == 1:
             self.page_info["is_one_app"] = False
 
+    # 打包事件
+    def page_event(self):
+        r_path = os.path.dirname(Path())
+        print(r_path)
+        py_file = self.tree.getStateFiles()
+        for i in range(len(py_file)):
+            # print("-->",os.path.join(r_path,py_file[i]))
+            py_file[i]=path_to_unified(os.path.join(r_path,py_file[i]))
+
+        # 寻找入口程序并调整顺序
+        entrance_app_path = self.line_entrance.text()
+        if entrance_app_path not in py_file:
+            QMessageBox.critical(None,"错误","没有找到入口程序")
+            return
+        else:
+            # 判断位置是否在 0
+            index = py_file.index(entrance_app_path)
+            if index != 0:
+                temp_path = py_file.pop(index)
+                py_file.insert(0,temp_path)
+        print(py_file)
 
     def myEvent(self):
         self.next_p_0.clicked.connect(lambda :self.next_event(1,"next"))
@@ -597,14 +649,18 @@ background-color:#c12020;
         self.up_1.clicked.connect(lambda :self.next_event(0,"top"))
         self.next_p_1.clicked.connect(lambda :self.next_event(2,"next"))
 
+        # 第三页 -- 上一步/下一步
+        self.up_2.clicked.connect(lambda: self.next_event(1,"top"))
+        self.next_p_2.clicked.connect(lambda: self.next_event(3,"next"))
+
+        # 第四页 -- 上一步/下一步
+        self.up_3.clicked.connect(lambda :self.next_event(2,"top"))
+
         # 打开目录
         self.open_dir.clicked.connect(self.open_pro_dir_event)
         self.venv_path_open_dir.clicked.connect(self.open_interpreter_event)
         self.btn_entrance.clicked.connect(self.choose_entrance_file_event)
 
-        # 第三页 -- 上一步/下一步
-        self.up_2.clicked.connect(lambda: self.next_event(1,"top"))
-        self.next_p_2.clicked.connect(lambda: self.next_event(3,"next"))
 
         # 检测
         self.detection_btn.clicked.connect(self.detection_event)
@@ -613,6 +669,9 @@ background-color:#c12020;
         self.win_bobox.currentIndexChanged.connect(self.win_bobox_event)
         # 打包方式切换事件
         self.win_program.currentIndexChanged.connect(self.win_program_event)
+
+        # 打包事件
+        self.page_py.clicked.connect(self.page_event)
 
 
     def resizeEvent(self, e: QResizeEvent) -> None:
