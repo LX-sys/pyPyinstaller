@@ -25,6 +25,13 @@ is_system_linux = __system == Linux
 
 is_system_mac = __system == Mac
 
+# 对同一系统的不同风格的路径进行统一
+def path_to_unified(path:str):
+    if is_system_win:
+        if r"\\" in path:
+            return path.replace(r"\\","\\")
+    return path
+
 
 # 修正路径,并返回
 def correctionPath(path:str)->str:
