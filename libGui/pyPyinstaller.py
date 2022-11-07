@@ -23,7 +23,8 @@ from PyQt5.QtWidgets import (
     QRadioButton,
     QComboBox,
     QFileDialog,
-    QTextBrowser
+    QTextBrowser,
+    QMessageBox
 )
 from libGui.tree import Tree
 from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
@@ -31,10 +32,13 @@ from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Win
 class PyPyinstaller(QMainWindow):
     def __init__(self,*args,**kwargs):
         super(PyPyinstaller, self).__init__(*args,**kwargs)
+
         self.coreWin = QWidget()
         self.coreWin.setObjectName("coreWin")
         self.setCentralWidget(self.coreWin)
         self.resize(1200,800)
+        self.setMinimumSize(1200,800)
+        self.setMaximumSize(1200,800)
 
         # ---- 打包信息
         self.page_info = {
@@ -130,7 +134,7 @@ background-color:#272727;
 #textBrowser_checkinfo{
 background-color:#000;
 color:#fff;
-font: 15pt "等线";
+font: 12pt "等线";
 }
 #label_entrance{
 color:red;
@@ -139,12 +143,12 @@ color:red;
         )
 
         self.myEvent()
-
-        self.setTitle("Py项目打包程序")
+        self.setWindowTitle("Py项目打包程序")
+        self.setCenterTitle("Py项目打包程序")
         self.st.setCurrentIndex(0)
         self.leftStyleTrack(0)
 
-    def setTitle(self,text:str):
+    def setCenterTitle(self,text:str):
         self.title.setText(text)
         self.title.move(self.width() // 2 - self.title.width(), 100 - self.title.height())
 
@@ -348,6 +352,8 @@ color:#254f72;
         self.up_1.setGeometry(650,30,120,40)
         self.next_p_1.setGeometry(780,30,120,40)
 
+        self.next_p_1.setEnabled(False)  # 不可用
+
     # 选择打包资源
     def win3(self):
         # 数
@@ -372,39 +378,72 @@ color:#254f72;
         self.up_2.setGeometry(160,540,120,40)
         self.next_p_2.setGeometry(300,540,120,40)
 
-
     # 输出到检测界面
     def outDetection(self,text):
         self.textBrowser_checkinfo.append(text)
 
     # 下一事件
-    def next_event(self,i):
-        if i == 1:
+    def next_event(self,i,direction):
+        if i == 0 and direction == "top":
+            # 返回上一页时,恢复检测状态
+            self.detection_btn.setText("检测")
+            self.detection_btn.setStyleSheet('''
+#detection_btn{
+border:none;
+background-color:gray;
+color:#fff;
+font: 20pt "等线";
+}
+#detection_btn:hover{
+background-color:#272727;
+}
+            ''')
+
+        if i == 1 and direction == "top":
+            self.tree.clear()
+
+        if i == 1 and direction == "next":
+            if not self.pro_path.text() or \
+               not self.venv_path.text() or \
+               not self.line_entrance.text():
+               QMessageBox.critical(None,"错误","信息不完整")
+               return
             self.page_info["project_path"] = self.pro_path.text() # 项目目录
+
+        if i == 2 and direction == "next":
+            self.tree.openTree(self.pro_path.text())
         self.st.setCurrentIndex(i)
         self.leftStyleTrack(i)
 
     # 打开项目目录
     def open_pro_dir_event(self):
         directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
-        directory_path = correctionPath(directory_path) # 修正路径
-        self.pro_path.setText(directory_path)
-        self.page_info["project_path"]=directory_path
+        if directory_path:
+            self.venv_path.clear() # 先清空虚拟环境路径
+            self.line_entrance.clear() # 清空入口程序路径
 
-        # 选择目录的同时,简单查找一下解释器路径
-        if self.ra_venv.isChecked():
-            if is_system_win:
-                interpreter_path = os.path.join(directory_path,"venv","Scripts","python.exe")
-            elif is_system_mac:
-                interpreter_path = os.path.join(directory_path, "venv", "bin", "python")
+            directory_path = correctionPath(directory_path) # 修正路径
+            self.pro_path.setText(directory_path)
+            self.page_info["project_path"]=directory_path
 
-            interpreter_path = correctionPath(interpreter_path)
+            # 选择目录的同时,简单查找一下解释器路径
+            if self.ra_venv.isChecked():
+                if is_system_win:
+                    interpreter_path = os.path.join(directory_path,"venv","Scripts","python.exe")
+                elif is_system_mac:
+                    interpreter_path = os.path.join(directory_path, "venv", "bin", "python")
 
-            if os.path.isfile(interpreter_path):
-                self.venv_path.setText(interpreter_path)
-                self.page_info["interpreter_path"]=interpreter_path
-                self.venv_path.setEnabled(True)
-        print(self.page_info)
+                interpreter_path = correctionPath(interpreter_path)
+
+                # 如果没有找到虚拟环境,就切换成本地环境
+                if os.path.isfile(interpreter_path):
+                    self.venv_path.setText(interpreter_path)
+                    self.page_info["interpreter_path"]=interpreter_path
+                    self.venv_path.setEnabled(True)
+                else:
+                    self.ra_loac.setChecked(True)
+                    self.venv_path.setPlaceholderText("未找到虚拟环境,请设置本地解释器")
+            print(self.page_info)
 
     # 选择解释器
     def open_interpreter_event(self):
@@ -424,17 +463,24 @@ color:#254f72;
     # 检测事件
     def detection_event(self):
         self.textBrowser_checkinfo.clear() # 清屏
+        self.outDetection("检测中...")
+        self.detection_btn.setEnabled(False) # 检测中按钮不可用
+        detection_res = None # 检测结果标记
+        # =========================
+
         # 检测项目目录
         if os.path.isdir(self.pro_path.text()):
             self.outDetection("项目目录: {}".format(self.pro_path.text()))
         else:
             self.outDetection("项目目录: {}".format(self.pro_path.text()))
+            detection_res = False
 
         # 检测程序入口文件
         if os.path.isfile(self.line_entrance.text()):
             self.outDetection("程序入口文件路径:{}".format(self.line_entrance.text()))
         else:
             self.outDetection("程序入口文件路径:不存在")
+            detection_res = False
 
         # 检测虚拟环境
         venv_path = self.venv_path.text() # 虚拟环境路径
@@ -442,12 +488,15 @@ color:#254f72;
             self.outDetection("虚拟环境: {}".format(venv_path))
         else:
             self.outDetection("虚拟环境: 不存在")
+            detection_res = False
 
         # 检测python 版本
         try:
-            po = subprocess.Popen("'{}' -V".format(venv_path),
-                                  stdout=subprocess.PIPE,
-                                  shell=True)
+            if is_system_win:
+                cmd = "{} -V".format(venv_path)
+            if is_system_mac:
+                cmd ="'{}' -V".format(venv_path)
+            po = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
             python_v = po.communicate()[0].decode("utf-8")
             if is_system_win:
                 python_v = python_v.replace("\r\n","")
@@ -457,12 +506,16 @@ color:#254f72;
         except Exception as e:
             print(e)
             self.outDetection("虚拟环境python版本: 没有python")
+            detection_res = False
 
         # 检测pyinstaller有没有安装
         try:
-            pyin = subprocess.Popen("'{}' -m pip list".format(self.venv_path.text()),
-                                    stdout=subprocess.PIPE,
-                                    shell=True)
+            if is_system_win:
+                cmd = "{} -m pip list".format(self.venv_path.text())
+            if is_system_mac:
+                cmd ="'{}' -m pip list".format(self.venv_path.text())
+
+            pyin = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
             piplist = pyin.communicate()[0].decode("utf-8")
             if is_system_win:
                 piplist = piplist.split("\r\n")
@@ -478,6 +531,7 @@ color:#254f72;
                 self.outDetection("pyinstaller是否安装: 没有安装,请安装 pip install pyinstaller")
         except:
             self.outDetection("pyinstaller是否安装: 没有找到python")
+            detection_res = False
 
         # 终端窗口
         self.outDetection("是否需要终端窗口: {}".format("需要" if self.page_info["is_win"] else "不需要"))
@@ -490,6 +544,36 @@ color:#254f72;
         # 打包程序名称
         self.page_info["app_name"] = self.line_app_name.text()
         self.outDetection("可执行程序名称: {}".format(self.page_info["app_name"]))
+
+        # ==========
+        self.detection_btn.setEnabled(True)  # 解放检测按钮
+        if detection_res is False:
+            self.detection_btn.setStyleSheet('''
+#detection_btn{
+border:none;
+background-color:#e52626;
+color:#fff;
+font: 20pt "等线";
+}
+#detection_btn:hover{
+background-color:#c12020;
+}
+            ''')
+            self.detection_btn.setText("检测未通过")
+        else:
+            self.next_p_1.setEnabled(True)
+            self.detection_btn.setStyleSheet('''
+            #detection_btn{
+            border:none;
+            background-color:#97e200;
+            color:#fff;
+            font: 20pt "等线";
+            }
+            #detection_btn:hover{
+            background-color:#71aa00;
+            }
+                        ''')
+            self.detection_btn.setText("检测通过")
 
     # 是否需要终端窗口事件
     def win_bobox_event(self,i):
@@ -507,11 +591,11 @@ color:#254f72;
 
 
     def myEvent(self):
-        self.next_p_0.clicked.connect(lambda :self.next_event(1))
+        self.next_p_0.clicked.connect(lambda :self.next_event(1,"next"))
 
         # 第二页 -- 上一步/下一步
-        self.up_1.clicked.connect(lambda :self.next_event(0))
-        self.next_p_1.clicked.connect(lambda :self.next_event(2))
+        self.up_1.clicked.connect(lambda :self.next_event(0,"top"))
+        self.next_p_1.clicked.connect(lambda :self.next_event(2,"next"))
 
         # 打开目录
         self.open_dir.clicked.connect(self.open_pro_dir_event)
@@ -519,8 +603,8 @@ color:#254f72;
         self.btn_entrance.clicked.connect(self.choose_entrance_file_event)
 
         # 第三页 -- 上一步/下一步
-        self.up_2.clicked.connect(lambda: self.next_event(1))
-        self.next_p_2.clicked.connect(lambda: self.next_event(3))
+        self.up_2.clicked.connect(lambda: self.next_event(1,"top"))
+        self.next_p_2.clicked.connect(lambda: self.next_event(3,"next"))
 
         # 检测
         self.detection_btn.clicked.connect(self.detection_event)

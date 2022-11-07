@@ -31,15 +31,21 @@ class Tree(QTreeWidget):
         self.checkState_paths = []
 
         self.setObjectName("tree")
-        pro = ProjectPath()
-        pro.setProjectPath(r"/Applications/Python 3.8/save/pyPyinstaller", "main.py", pro.PyCharm)
-        t = dict()
-        pro.tree(pro.pro_path, t)
-        # print(t)
-        print("==================")
-        self.createTree(t)
+        self.pro = ProjectPath()
+        # self.pro.setProjectPath(r"D:\code\wpTranscribe", pro.PyCharm)
+        # t = dict()
+        # self.pro.tree(pro.pro_path, t)
+        # # print(t)
+        # print("==================")
+        # self.createTree(t)
 
         self.myEvent()
+
+    def openTree(self,path:str,compiler:str="PyCharm"):
+        self.pro.setProjectPath(path,compiler)
+        t = dict()
+        self.pro.tree(path, t)
+        self.createTree(t)
 
     # 创建项目目录
     def createTree(self,tree:dict,praret=None):
@@ -67,8 +73,11 @@ class Tree(QTreeWidget):
     def updateTree(self,tree:dict,praret=None):
         # 创建树之前,先清空,避免出现意外
         self.clear()
-        self.checkState_paths.clear()
         self.createTree(tree,praret)
+
+    def clear(self) -> None:
+        self.checkState_paths.clear()
+        super(Tree, self).clear()
 
     # 勾选文件事件
     def checkState_event(self,item:QTreeWidgetItem):
@@ -156,6 +165,7 @@ class Tree(QTreeWidget):
                             break
                     if flag:
                         self.checkState_paths.append(part_path)
+                    # self.checkState_paths.append(part_path)
                 else:
                     self.getStateFile(self.getItem(i),part_path)
         return copy.copy(self.checkState_paths)  # 这里必须返回copy,不能直接返回

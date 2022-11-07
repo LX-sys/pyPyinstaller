@@ -15,11 +15,10 @@ class ProjectPath:
 
     def __init__(self):
         self.pro_path = ""
-        self.main_file = ""
         self.compiler_name = ""
 
     # 设置项目的路径,入口程序文件名
-    def setProjectPath(self,path:str,main_file:str,compiler:str):
+    def setProjectPath(self,path:str,compiler:str="PyCharm"):
         '''
 
         :param path: 目录路径
@@ -28,8 +27,9 @@ class ProjectPath:
         :return:
         '''
         self.pro_path = path
-        self.main_file =main_file
         self.compiler_name = compiler
+        if compiler == ProjectPath.PyCharm:
+            self.filter__file = [".idea","__pycache__","venv",".DS_Store",".git"]
 
     # 生成树
     def tree(self,path,tree_dict:dict):
@@ -44,14 +44,14 @@ class ProjectPath:
         tree_dict[name] =[]
         root = os.listdir(path)
         for f in root:
-            if f in [".idea","__pycache__","venv",".DS_Store",".git"]:
+            if f in self.filter__file:
                 continue
             join_path = os.path.join(path,f)
 
             # 文件
             if os.path.isfile(join_path):
                 tree_dict[name].append(f)
-                print(join_path)
+                # print(join_path)
             elif os.path.isdir(join_path):
                 temp={f:[]}
                 tree_dict[name].append(temp)
@@ -60,7 +60,7 @@ class ProjectPath:
 if __name__ == '__main__':
     pro = ProjectPath()
     # print(os.listdir(r"/Applications/Python 3.8/save/pyPyinstaller"))
-    pro.setProjectPath(r"/Applications/Python 3.8/save/pyPyinstaller","main.py",pro.PyCharm)
+    pro.setProjectPath(r"/Applications/Python 3.8/save/pyPyinstaller",pro.PyCharm)
     t=dict()
     pro.tree(pro.pro_path,t)
     print(t)
