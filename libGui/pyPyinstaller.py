@@ -640,7 +640,28 @@ background-color:#c12020;
             if index != 0:
                 temp_path = py_file.pop(index)
                 py_file.insert(0,temp_path)
-        print(py_file)
+
+            # 生成命令
+            cmd = "PyInstaller "
+
+            if self.win_bobox.currentIndex() == 0: # 带终端窗口
+                cmd+="-D "
+
+            if self.win_program.currentIndex() ==0: # 打包成单一程序
+                cmd+="-F "
+
+            # 程序名称
+            cmd+="-n {} ".format(self.line_app_name.text())
+
+            # 程序文件
+            cmd+="{} -p ".format(py_file.pop(0))
+
+            if is_system_win:
+                for path in py_file:
+                    cmd+="{};".format(path)
+            print(cmd)
+
+
 
     def myEvent(self):
         self.next_p_0.clicked.connect(lambda :self.next_event(1,"next"))
