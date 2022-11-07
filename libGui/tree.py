@@ -32,13 +32,7 @@ class Tree(QTreeWidget):
 
         self.setObjectName("tree")
         self.pro = ProjectPath()
-        # self.pro.setProjectPath(r"D:\code\wpTranscribe", pro.PyCharm)
-        # t = dict()
-        # self.pro.tree(pro.pro_path, t)
-        # # print(t)
-        # print("==================")
-        # self.createTree(t)
-        self.openTree(r"D:\code\wpTranscribe")
+        # self.openTree(r"D:\code\wpTranscribe")
 
         self.myEvent()
 
@@ -122,8 +116,12 @@ class Tree(QTreeWidget):
         #         self.checkState_paths[i] = cur_item_xpath + self.checkState_paths[i]
         #
         # 最终路径列表
-        print(self.checkState_paths)
+        # print(self.checkState_paths)
         # self.treeCheckStateListed.emit(self.checkState_paths)
+
+    # 返回所有选择的文件
+    def getStateFiles(self)->list:
+        return self.checkState_paths
 
     # 返回当前对象下面的项
     def getItem(self,item):
