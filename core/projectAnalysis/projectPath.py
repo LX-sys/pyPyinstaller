@@ -39,7 +39,7 @@ class ProjectPath:
         :param tree_dict: 一个空字典,存储数的结构
         :return:
         '''
-        print(path)
+        # print(path)
         name = os.path.basename(path)
         tree_dict[name] =[]
         root = os.listdir(path)
