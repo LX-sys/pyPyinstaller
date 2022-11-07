@@ -7,7 +7,7 @@ import os
 import sys
 import subprocess
 # from PyQt5.Qt import Qt
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,QThread
 from PyQt5.QtGui import QResizeEvent
 from PyQt5.QtWidgets import (
     QApplication,
@@ -25,11 +25,36 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QTextBrowser,
     QMessageBox,
-    QProgressBar
+    QProgressBar,
 )
 from core.utility import Path,path_to_unified
 from libGui.tree import Tree
 from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
+
+
+# 下载进度线程
+class DownBarThread(QThread):
+    def __init__(self,*args,**kwargs):
+        super(DownBarThread, self).__init__(*args,**kwargs)
+        self.sub = None # type:subprocess.Popen
+        self.process = None # type:QProgressBar
+        self.page_btn = None # type:QPushButton
+
+    def setArge(self,sub,page_process,page_btn):
+        self.sub = sub
+        self.process = page_process
+        self.page_btn = page_btn
+
+    def run(self) -> None:
+        self.page_btn.setText("打包中")
+        self.page_btn.setEnabled(False)
+        while self.sub.poll() is None:
+            line = self.sub.stdout.readline()
+            line = line.strip().decode("utf-8")
+            if line:
+                self.process.append(line)
+        self.page_btn.setText("打包完成")
+
 
 class PyPyinstaller(QMainWindow):
     def __init__(self,*args,**kwargs):
@@ -41,6 +66,8 @@ class PyPyinstaller(QMainWindow):
         self.resize(1200,800)
         self.setMinimumSize(1200,800)
         self.setMaximumSize(1200,800)
+
+        self.down_th = DownBarThread()
 
         # ---- 打包信息
         self.page_info = {
@@ -625,8 +652,8 @@ background-color:#c12020;
         r_path = os.path.dirname(Path())
         print(r_path)
         py_file = self.tree.getStateFiles()
+
         for i in range(len(py_file)):
-            # print("-->",os.path.join(r_path,py_file[i]))
             py_file[i]=path_to_unified(os.path.join(r_path,py_file[i]))
 
         # 寻找入口程序并调整顺序
@@ -642,7 +669,12 @@ background-color:#c12020;
                 py_file.insert(0,temp_path)
 
             # 生成命令
-            cmd = "PyInstaller "
+            if is_system_win:
+                cmd = "{} -m PyInstaller ".format(self.venv_path.text())
+
+            if is_system_mac:
+                cmd = "'{}' -m PyInstaller ".format(self.venv_path.text())
+
 
             if self.win_bobox.currentIndex() == 0: # 带终端窗口
                 cmd+="-D "
@@ -654,13 +686,28 @@ background-color:#c12020;
             cmd+="-n {} ".format(self.line_app_name.text())
 
             # 程序文件
-            cmd+="{} -p ".format(py_file.pop(0))
+            head_file = py_file.pop(0)
+            if head_file:
+                if is_system_win:
+                    cmd+="{} -p ".format(head_file)
+                if is_system_mac:
+                    cmd += "'{}' -p ".format(head_file)
+            else:
+                if is_system_win:
+                    cmd += "{}".format(head_file)
+                if is_system_mac:
+                    cmd += "'{}'".format(head_file)
 
-            if is_system_win:
-                for path in py_file:
+            for path in py_file:
+                if is_system_win:
                     cmd+="{};".format(path)
+                if is_system_mac:
+                    cmd += "'{}';".format(path)
             print(cmd)
 
+            sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            self.down_th.setArge(sub,self.page_process,self.page_py)
+            self.down_th.start()
 
 
     def myEvent(self):
