@@ -42,18 +42,20 @@ class DownBarThread(QThread):
         这个错误原因是在程序在线程中 QTextBrowser 对这个控件使用append()
 
     '''
-    sendPageInfo =pyqtSignal(str)
+    sendPageInfo =pyqtSignal(dict)
 
     def __init__(self,*args,**kwargs):
         super(DownBarThread, self).__init__(*args,**kwargs)
         self.sub = None # type:subprocess.Popen
         self.process = None # type:QTextBrowser
         self.page_btn = None # type:QPushButton
+        self.pbar = None # type:QProgressBar
 
-    def setArge(self,sub,page_process,page_btn):
+    def setArge(self,sub,page_process,page_btn,pbar):
         self.sub = sub
         self.process = page_process
         self.page_btn = page_btn
+        self.pbar = pbar
 
     def run(self) -> None:
         self.page_btn.setText("打包中")
@@ -62,10 +64,10 @@ class DownBarThread(QThread):
             line = self.sub.stdout.readline()
             line = line.strip().decode("utf-8")
             if line:
-                # self.process.append(line)
-                self.sendPageInfo.emit(line)
-                # self.process.moveCursor(self.process.textCursor().End)
+                self.sendPageInfo.emit({"line":line,"bar":self.pbar.value()+1})
+
         self.page_btn.setText("打包完成")
+        self.sendPageInfo.emit({"line": "打包完成", "bar": self.pbar.maximum()})
         #打包完成样式
         self.page_btn.setStyleSheet('''
 #page_py{
@@ -440,7 +442,7 @@ color:#254f72;
         self.page_progressBar = QProgressBar(self.st_win_4) # 进度条
         self.page_progressBar.setObjectName("page_progressBar")
         self.page_progressBar.setGeometry(40,100,850,30)
-        self.page_progressBar.setValue(50)
+        self.page_progressBar.setMaximum(100)
         self.page_process = QTextBrowser(self.st_win_4)
         self.page_process.setObjectName("page_process")
         self.page_process.setGeometry(40,140,850,450)
@@ -522,6 +524,11 @@ background-color:#272727;
                 else:
                     self.ra_loac.setChecked(True)
                     self.venv_path.setPlaceholderText("未找到虚拟环境,请设置本地解释器")
+
+            # ====解放打包按钮,并清屏
+            self.page_py.setText("打包")
+            self.page_py.setEnabled(True)
+            self.page_process.clear()
             print(self.page_info)
 
     # 选择解释器
@@ -679,6 +686,8 @@ background-color:#c12020;
         for i in range(len(py_file)):
             py_file[i]=path_to_unified(os.path.join(r_path,py_file[i]))
 
+        self.page_progressBar.setValue(0) # 重置进度条
+
         # 寻找入口程序并调整顺序
         entrance_app_path = self.line_entrance.text()
         print("====")
@@ -733,12 +742,15 @@ background-color:#c12020;
             print(cmd)
 
             sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-            self.down_th.setArge(sub,self.page_process,self.page_py)
+            self.down_th.setArge(sub,self.page_process,self.page_py,self.page_progressBar)
             self.down_th.start()
 
     # 打包信息事件
-    def page_info_event(self,info:str):
-        self.page_process.append(info)
+    def page_info_event(self,info:dict):
+        line = info["line"]
+        bar = info["bar"]
+        self.page_progressBar.setValue(bar)
+        self.page_process.append(line)
         self.page_process.moveCursor(self.page_process.textCursor().End)
 
     def myEvent(self):
