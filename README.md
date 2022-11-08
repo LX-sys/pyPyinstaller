@@ -3,7 +3,7 @@
     
     下面展示的用这个项目打包 这个项目本身
 
-![1](image\1.png)
+![1](https://github.com/LX-sys/pyPyinstaller/blob/master/image/1.png)
 
 ![2](image\2.png)
 
