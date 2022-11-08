@@ -7,7 +7,7 @@ import os
 import sys
 import subprocess
 # from PyQt5.Qt import Qt
-from PyQt5.QtCore import Qt,QThread
+from PyQt5.QtCore import Qt,QThread,pyqtSignal
 from PyQt5.QtGui import QResizeEvent
 from PyQt5.QtWidgets import (
     QApplication,
@@ -34,10 +34,20 @@ from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Win
 
 # 下载进度线程
 class DownBarThread(QThread):
+    #
+    '''
+        发送打包过程中的信息,避免造下面的错误
+        QObject::connect: Cannot queue arguments of type 'QTextCursor'
+        (Make sure 'QTextCursor' is registered using qRegisterMetaType().)
+        这个错误原因是在程序在线程中 QTextBrowser 对这个控件使用append()
+
+    '''
+    sendPageInfo =pyqtSignal(str)
+
     def __init__(self,*args,**kwargs):
         super(DownBarThread, self).__init__(*args,**kwargs)
         self.sub = None # type:subprocess.Popen
-        self.process = None # type:QProgressBar
+        self.process = None # type:QTextBrowser
         self.page_btn = None # type:QPushButton
 
     def setArge(self,sub,page_process,page_btn):
@@ -52,8 +62,19 @@ class DownBarThread(QThread):
             line = self.sub.stdout.readline()
             line = line.strip().decode("utf-8")
             if line:
-                self.process.append(line)
+                # self.process.append(line)
+                self.sendPageInfo.emit(line)
+                # self.process.moveCursor(self.process.textCursor().End)
         self.page_btn.setText("打包完成")
+        #打包完成样式
+        self.page_btn.setStyleSheet('''
+#page_py{
+background-color: rgb(0, 170, 0);
+color: rgb(255, 255, 255);
+font: 11pt "等线";
+}
+        ''')
+
 
 
 class PyPyinstaller(QMainWindow):
@@ -542,10 +563,11 @@ background-color:#272727;
 
         # 检测虚拟环境
         venv_path = self.venv_path.text() # 虚拟环境路径
+        ra_text ="虚拟环境" if self.ra_venv.isChecked() else "本地环境"
         if os.path.isfile(venv_path):
-            self.outDetection("虚拟环境: {}".format(venv_path))
+            self.outDetection("{}: {}".format(ra_text,venv_path))
         else:
-            self.outDetection("虚拟环境: 不存在")
+            self.outDetection("{}: 不存在".format(ra_text))
             detection_res = False
 
         # 检测python 版本
@@ -560,10 +582,10 @@ background-color:#272727;
                 python_v = python_v.replace("\r\n","")
             if is_system_mac:
                 python_v = python_v.replace("\n", "")
-            self.outDetection("虚拟环境python版本: {}".format(python_v))
+            self.outDetection("{}python版本: {}".format(ra_text,python_v))
         except Exception as e:
             print(e)
-            self.outDetection("虚拟环境python版本: 没有python")
+            self.outDetection("{}python版本: 没找到python".format(ra_text))
             detection_res = False
 
         # 检测pyinstaller有没有安装
@@ -587,6 +609,7 @@ background-color:#272727;
                     break
             if is_pyinstaller is False:
                 self.outDetection("pyinstaller是否安装: 没有安装,请安装 pip install pyinstaller")
+                detection_res = False
         except:
             self.outDetection("pyinstaller是否安装: 没有找到python")
             detection_res = False
@@ -649,7 +672,7 @@ background-color:#c12020;
 
     # 打包事件
     def page_event(self):
-        r_path = os.path.dirname(Path())
+        r_path = os.path.dirname(self.pro_path.text())
         print(r_path)
         py_file = self.tree.getStateFiles()
 
@@ -658,6 +681,10 @@ background-color:#c12020;
 
         # 寻找入口程序并调整顺序
         entrance_app_path = self.line_entrance.text()
+        print("====")
+        print(entrance_app_path)
+        print(py_file)
+        print("====")
         if entrance_app_path not in py_file:
             QMessageBox.critical(None,"错误","没有找到入口程序")
             return
@@ -709,6 +736,10 @@ background-color:#c12020;
             self.down_th.setArge(sub,self.page_process,self.page_py)
             self.down_th.start()
 
+    # 打包信息事件
+    def page_info_event(self,info:str):
+        self.page_process.append(info)
+        self.page_process.moveCursor(self.page_process.textCursor().End)
 
     def myEvent(self):
         self.next_p_0.clicked.connect(lambda :self.next_event(1,"next"))
@@ -729,7 +760,6 @@ background-color:#c12020;
         self.venv_path_open_dir.clicked.connect(self.open_interpreter_event)
         self.btn_entrance.clicked.connect(self.choose_entrance_file_event)
 
-
         # 检测
         self.detection_btn.clicked.connect(self.detection_event)
 
@@ -740,6 +770,9 @@ background-color:#c12020;
 
         # 打包事件
         self.page_py.clicked.connect(self.page_event)
+
+        # 线程回传西打包信息事件
+        self.down_th.sendPageInfo.connect(self.page_info_event)
 
 
     def resizeEvent(self, e: QResizeEvent) -> None:
