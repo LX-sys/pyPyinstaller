@@ -16,8 +16,6 @@ from core.projectAnalysis.projectPath import ProjectPath
 
 
 class Tree(QTreeWidget):
-    # 所有选中项字典信号
-    # treeCheckStateListed = pyqtSignal(list)
 
     def __init__(self,*args,**kwargs):
         super(Tree, self).__init__(*args,**kwargs)
@@ -110,15 +108,6 @@ class Tree(QTreeWidget):
             else:
                 if cur_item_xpath in self.checkState_paths:
                     self.checkState_paths.remove(cur_item_xpath)
-        #
-        # # 所有路径拼成完整路径
-        # for i in range(len(self.checkState_paths)):
-        #     if self.checkState_paths[i][0] == self.separator:
-        #         self.checkState_paths[i] = cur_item_xpath + self.checkState_paths[i]
-        #
-        # 最终路径列表
-        # print(self.checkState_paths)
-        # self.treeCheckStateListed.emit(self.checkState_paths)
 
     # 返回所有选择的文件
     def getStateFiles(self)->list:
@@ -158,13 +147,6 @@ class Tree(QTreeWidget):
             if i.checkState(0):
                 part_path = path+self.separator+cur_text  # 部分路径
                 if "." in cur_text: # 路径完整
-                    # flag = True
-                    # for p in self.checkState_paths:  # 判定路径是否存在
-                    #     if part_path in p:
-                    #         flag = False
-                    #         break
-                    # if flag:
-                    #     self.checkState_paths.append(part_path)
                     cu_item_xpath= self.xpathItem(i)
                     if cu_item_xpath not in self.checkState_paths:
                         self.checkState_paths.append(cu_item_xpath)

@@ -113,10 +113,13 @@ class PyPyinstaller(QMainWindow):
         self.st_win_3.setObjectName("st_win_3")
         self.st_win_4 = QWidget()
         self.st_win_4.setObjectName("st_win_4")
+        self.st_win_5 = QWidget()
+        self.st_win_5.setObjectName("st_win_5")
         self.st.addWidget(self.st_win_1)
         self.st.addWidget(self.st_win_2)
         self.st.addWidget(self.st_win_3)
         self.st.addWidget(self.st_win_4)
+        self.st.addWidget(self.st_win_5)
 
         self.initLayout()
         self.setStyleSheet(
@@ -150,7 +153,7 @@ font: 17pt "等线";
 background-color:#ffdf76;
 color:#254f72;
 }*/
-#st_win_1,#st_win_2,#st_win_3,#st_win_4{
+#st_win_1,#st_win_2,#st_win_3,#st_win_4,#st_win_5{
 background-color:#ffdf76;
 }
 QGroupBox{
@@ -193,6 +196,15 @@ font: 12pt "等线";
 }
 #label_entrance{
 color:red;
+}
+#page_new_pro{
+border:none;
+background-color: rgb(9, 72, 189);
+color: rgb(255, 255, 255);
+font: 12pt "等线";
+}
+#page_new_pro:hover{
+background-color: rgb(0, 0, 181);
 }
 '''
         )
@@ -286,6 +298,7 @@ color:red;
         self.win2()
         self.win3()
         self.win4()
+        self.win5()
 
     # 左侧样式跟随
     def leftStyleTrack(self,i):
@@ -455,6 +468,12 @@ color:#254f72;
         self.next_p_3.setObjectName("next_p_3")
         self.next_p_3.setGeometry(800,40,120,40)
 
+    # 完成
+    def win5(self):
+        self.page_new_pro = QPushButton("打包新项目",self.st_win_5)
+        self.page_new_pro.setObjectName("page_new_pro")
+        self.page_new_pro.setGeometry(300,250,180,90)
+
     # 输出到检测界面
     def outDetection(self,text):
         self.textBrowser_checkinfo.append(text)
@@ -485,13 +504,17 @@ background-color:#272727;
                not self.line_entrance.text():
                QMessageBox.critical(None,"错误","信息不完整")
                return
+            self.textBrowser_checkinfo.clear()
+            self.outDetection("请检测")
             self.page_info["project_path"] = self.pro_path.text() # 项目目录
 
         if i == 2 and direction == "next":
             self.tree.openTree(self.pro_path.text())
 
         if i == 3 and direction == "next":
-            pass
+            if not self.tree.getStateFiles():
+                QMessageBox.critical(None, "错误", "没有选择任何打包文件")
+                return
 
         self.st.setCurrentIndex(i)
         self.leftStyleTrack(i)
@@ -529,7 +552,7 @@ background-color:#272727;
             self.page_py.setText("打包")
             self.page_py.setEnabled(True)
             self.page_process.clear()
-            print(self.page_info)
+            # print(self.page_info)
 
     # 选择解释器
     def open_interpreter_event(self):
@@ -690,10 +713,10 @@ background-color:#c12020;
 
         # 寻找入口程序并调整顺序
         entrance_app_path = self.line_entrance.text()
-        print("====")
-        print(entrance_app_path)
-        print(py_file)
-        print("====")
+        # print("====")
+        # print(entrance_app_path)
+        # print(py_file)
+        # print("====")
         if entrance_app_path not in py_file:
             QMessageBox.critical(None,"错误","没有找到入口程序")
             return
@@ -766,6 +789,7 @@ background-color:#c12020;
 
         # 第四页 -- 上一步/下一步
         self.up_3.clicked.connect(lambda :self.next_event(2,"top"))
+        self.next_p_3.clicked.connect(lambda :self.next_event(4,"next"))
 
         # 打开目录
         self.open_dir.clicked.connect(self.open_pro_dir_event)
@@ -786,9 +810,7 @@ background-color:#c12020;
         # 线程回传西打包信息事件
         self.down_th.sendPageInfo.connect(self.page_info_event)
 
-
     def resizeEvent(self, e: QResizeEvent) -> None:
-        # print(e.size().width())
         self.title.move(e.size().width() // 2-50, 100 - self.title.height())
         super(PyPyinstaller, self).resizeEvent(e)
 
