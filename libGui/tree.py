@@ -17,7 +17,7 @@ from core.projectAnalysis.projectPath import ProjectPath
 
 class Tree(QTreeWidget):
     # 所有选中项字典信号
-    treeCheckStateListed = pyqtSignal(list)
+    # treeCheckStateListed = pyqtSignal(list)
 
     def __init__(self,*args,**kwargs):
         super(Tree, self).__init__(*args,**kwargs)
@@ -108,7 +108,8 @@ class Tree(QTreeWidget):
                     if cu_text in t:
                         self.checkState_paths.remove(t)
             else:
-                self.checkState_paths.remove(cur_item_xpath)
+                if cur_item_xpath in self.checkState_paths:
+                    self.checkState_paths.remove(cur_item_xpath)
         #
         # # 所有路径拼成完整路径
         # for i in range(len(self.checkState_paths)):
