@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import (
 from core.utility import is_system_win,is_system_mac
 from libGui.st.fwin import FirstWin,TwoWin
 
+
 # 启动界面
 class StartInterface(QStackedWidget):
     def __init__(self,*args,**kwargs):
@@ -67,7 +68,6 @@ background-color:#1c3b56;
         self.two_win = TwoWin()
         self.addWidget(self.first_win)
         self.addWidget(self.two_win)
-
 
         self.myevent()
 

@@ -23,7 +23,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QGroupBox,
     QLineEdit,
-    QRadioButton
+    QRadioButton,
+    QListWidgetItem
 )
 from core.utility import is_system_win,is_system_mac
 
@@ -142,7 +143,7 @@ class TwoWin(QWidget):
         self.setObjectName("first_win")
         self.configurationPage()
         self.info = {
-            "scriptType":"ordinary",
+            "scriptType":"普通脚本",
             "editName":"PyCharm",
             "pageWay":"Pyinstaller",
             "sys":"Win"
@@ -347,13 +348,21 @@ background-color:#2c5f86;
         self.bottom_hlay.addWidget(self.after_btn)
 
         def _ed_box(self,name):
+            if name == "It":
+                name = self.line_box.text()
+                # if not name:
+                #     name = "It"
             self.info["editName"]=name
 
         def _page_way(self,name):
             self.info["pageWay"] = name
 
+        def _pro(self,name):
+            self.info["scriptType"]=name
+
         self.editor_box.currentTextChanged.connect(lambda name:_ed_box(self,name))
         self.page_way.currentTextChanged.connect(lambda name:_page_way(self,name))
+        self.project_species.itemClicked.connect(lambda item:_pro(self,item.text()))
         # 返回事件
         self.before_btn.clicked.connect(lambda :self.beforeed.emit())
         self.after_btn.clicked.connect(lambda :self.submited.emit(self.info))
