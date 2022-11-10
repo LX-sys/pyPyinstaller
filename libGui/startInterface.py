@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QRadioButton
 )
+from core.utility import is_system_win,is_system_mac
 
 
 # 启动界面
@@ -113,7 +114,7 @@ background-color:#1c3b56;
 
     # 配置页面(二)
     def configurationPage(self):
-        self.two_win.setStyleSheet('''
+        self.two_win.setStyleSheet(r'''
         #logo{
         border:1px solid red;
         }
@@ -122,13 +123,13 @@ background-color:#1c3b56;
         }*/
         
 
-#editor_gbox,#sys_gbox{
+#editor_gbox,#sys_gbox,#page_box,#middle_right{
 color: #408bc8;
 border:2px solid #3573a7;
 font: 12pt "等线";
 border-radius:5px;
 }
-#editor_box,#line_box{
+#editor_box,#line_box,#page_way{
 background-color: rgb(28, 59, 86);
 font: 12pt "等线";
 color:#fff;
@@ -136,16 +137,43 @@ color:#fff;
 #line_box{
 border:1px solid #357dbd;
 }
-#editor_box QAbstractItemView{
+#editor_box QAbstractItemView,#page_way QAbstractItemView{
 color:#fff;
 background: transparent;
 }
-#win_label,#mac_label{
+/*#win_label,#mac_label{
 border:1px solid yellow;
+}*/
+#win_label{
+background-image:url(../image/appimage/windows-96-gray.png);
+}
+#mac_label{
+background-image:url(../image/appimage/mac-96-gray.png);
 }
 #win_radio,#mac_radio{
 font: 10pt "等线";
 color:#fff;
+}
+#placeholder_win{
+border:1px solid yellow;
+}
+#before_btn,#after_btn{
+border-radius:5px;
+color:#fff;
+font: 12pt "等线";
+}
+#before_btn{
+background-color:gray;
+}
+#before_btn:hover{
+background-color:#555656;
+}
+#after_btn{
+background-color:#3572a3;
+}
+#after_btn:hover{
+color:#cecece;
+background-color:#2c5f86;
 }
         ''')
 
@@ -198,6 +226,7 @@ color:#fff;
         self.line_box = QLineEdit()
         self.line_box.setObjectName("line_box")
         self.line_box.setFixedSize(160,30)
+        self.line_box.setPlaceholderText("输入编辑器名称")
         self.editor_glay.addWidget(self.editor_box)
         self.editor_glay.addWidget(self.line_box)
         self.addEditName("PyCharm")
@@ -215,8 +244,8 @@ color:#fff;
         self.sys_gbox.setFixedSize(470, 150)
         self.sys_gbox.move(280, 25)
 
-        ImageSize = (64, 64)
-        RadioSize = (64, 20)
+        ImageSize = (96, 96)
+        RadioSize = (96, 20)
         self.wm_hlay = QHBoxLayout(self.sys_gbox)
         self.win_hlay = QVBoxLayout()
         self.win_label = QLabel()
@@ -243,6 +272,63 @@ color:#fff;
         self.win_radio.clicked.connect(lambda :self.sys_event(self.win_radio))
         self.mac_radio.clicked.connect(lambda :self.sys_event(self.mac_radio))
 
+        # 中间部分的整体布局
+        self.middle_hlay = QHBoxLayout(self.rigth_middle)
+        self.page_box = QGroupBox()
+        self.page_box.setObjectName("page_box")
+        self.page_box.setTitle("打包方式")
+        self.page_box.setFixedWidth(280)
+
+        self.p_box_vlay = QVBoxLayout(self.page_box) # 打包方式里面的垂直布局
+        self.p_box_vlay.setContentsMargins(9,20,9,9)
+        self.page_way = QComboBox() # 打包方式
+        self.page_way.setObjectName("page_way")
+        self.page_way.setFixedHeight(40)
+        self.placeholder_win = QWidget() # 占位,目前还不知道
+        self.placeholder_win.setObjectName("placeholder_win")
+        self.p_box_vlay.addWidget(self.page_way)
+        self.p_box_vlay.addWidget(self.placeholder_win)
+
+        self.addPageWay("Pyinstaller")
+        self.addPageWay("Nuitka")
+
+        self.middle_right = QWidget() # 中间部分的右侧
+        self.middle_right.setObjectName("middle_right")
+
+        self.middle_hlay.addWidget(self.page_box)
+        self.middle_hlay.addWidget(self.middle_right)
+
+        # 下部分
+        self.bottom_hlay = QHBoxLayout(self.rigth_bottom) # 水平布局
+        self.before_btn = QPushButton("返回")
+        self.before_btn.setObjectName("before_btn")
+        self.before_btn.setFixedSize(55,55)
+        self.after_btn = QPushButton("开始配置配置项目")
+        self.after_btn.setObjectName("after_btn")
+        self.after_btn.setFixedHeight(55)
+
+        self.bottom_hlay.addWidget(self.before_btn)
+        self.bottom_hlay.addWidget(self.after_btn)
+
+
+        # 返回事件
+        self.before_btn.clicked.connect(lambda :self.setCurrentIndex(0))
+
+        # 根据当前系统选择
+        if is_system_win:
+            self.win_radio.setChecked(True)
+            self.win_label.setStyleSheet('''
+            #win_label{
+            background-image: url(../image/appimage/windows-96-color.png);
+            }''')
+        if is_system_mac:
+            self.mac_radio.setChecked(True)
+            self.mac_label.setStyleSheet('''
+#mac_label{
+background-image:url(../image/appimage/mac-96-color.png);
+}
+''')
+
     # 动画事件
     def ani_event(self,i):
         ani = QPropertyAnimation(self.left_win,b"pos",self)
@@ -259,11 +345,38 @@ color:#fff;
 
     # 系统选择事件
     def sys_event(self,obj:QRadioButton):
+        win_logo = {
+            "gray":'''
+#win_label{
+background-image: url(../image/appimage/windows-96-gray.png);
+}
+''',
+            "color":'''
+            #win_label{
+            background-image: url(../image/appimage/windows-96-color.png);
+            }'''
+        }
+        mac_logo={
+            "gray":'''
+            #mac_label{
+background-image:url(../image/appimage/mac-96-gray.png);
+}
+            ''',
+            "color":'''
+#mac_label{
+background-image:url(../image/appimage/mac-96-color.png);
+}
+'''
+        }
+
         text = obj.text()
         if text == "Win":
-            print("Win亮图标")
+            self.win_label.setStyleSheet(win_logo["color"])
+            self.mac_label.setStyleSheet(mac_logo["gray"])
         if text == "Mac":
             print("Mac亮图标")
+            self.win_label.setStyleSheet(win_logo["gray"])
+            self.mac_label.setStyleSheet(mac_logo["color"])
 
 
     # OK按钮的事件
@@ -288,6 +401,10 @@ color:#fff;
     # 添加编辑器名称
     def addEditName(self,name:str):
         self.editor_box.addItem(name)
+
+    # 添加打包方式
+    def addPageWay(self,text:str):
+        self.page_way.addItem(text)
 
 
 if __name__ == '__main__':
