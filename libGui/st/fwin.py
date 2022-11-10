@@ -10,7 +10,7 @@
 '''
 
 import sys
-from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal
+from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import (
     QGroupBox,
     QLineEdit,
     QRadioButton,
-    QListWidgetItem
+    QListWidgetItem,
+    QStackedWidget
 )
 from core.utility import is_system_win,is_system_mac
 
@@ -36,34 +37,37 @@ class FirstWin(QWidget):
         super(FirstWin, self).__init__(*args,**kwargs)
         self.setObjectName("first_win")
         self.setStyleSheet('''
-        #first_win{
-        background-color: rgb(38, 82, 120);
-        }   
-        #body{
-        border:2px solid rgb(30, 41, 51);
-        border-radius:10px;
-        }
-        #ok{
-        background-color: rgb(255, 217, 92);
-        font: 14pt "等线";
-        border:none;
-        border-radius:3px;
-        }
-        #ok:hover{
-        background-color: rgb(220, 198, 91);
-        color: rgb(255, 255, 255);
-        }
-        #listWidget_recently,#initial_options,#project_species{
-        background-color: rgb(28, 59, 86);
-        border:1px solid rgb(30, 41, 51);
-        border-radius:3px;
-        color:rgb(230, 221, 197);
-        font: 12pt "等线";
-        }
-        #initial_options QAbstractItemView{
-        background-color: rgb(28, 59, 86);
-        color:rgb(230, 221, 197);
-        }    ''')
+*{
+background-color: rgb(38, 82, 120);
+}
+#first_win{
+background-color: rgb(38, 82, 120);
+}   
+#body{
+border:2px solid rgb(30, 41, 51);
+border-radius:10px;
+}
+#ok{
+background-color: rgb(255, 217, 92);
+font: 14pt "等线";
+border:none;
+border-radius:3px;
+}
+#ok:hover{
+background-color: rgb(220, 198, 91);
+color: rgb(255, 255, 255);
+}
+#listWidget_recently,#initial_options{
+background-color: rgb(28, 59, 86);
+border:1px solid rgb(30, 41, 51);
+border-radius:3px;
+color:rgb(230, 221, 197);
+font: 12pt "等线";
+}
+#initial_options QAbstractItemView{
+background-color: rgb(28, 59, 86);
+color:rgb(230, 221, 197);
+}    ''')
         self.firstPage()
 
         self.info = {
@@ -133,7 +137,7 @@ class FirstWin(QWidget):
         self.listWidget_recently.addItem(text)
 
 
-# 配置页(2)
+# 初始配置页(2)
 class TwoWin(QWidget):
     beforeed = pyqtSignal()
     submited = pyqtSignal(dict) # 开始配置事件
@@ -151,14 +155,12 @@ class TwoWin(QWidget):
 
     def configurationPage(self):
         self.setStyleSheet(r'''
-        #logo{
-        border:1px solid red;
-        }
-        /*#rigth_top,#rigth_bottom{
-        border:1px solid yellow;
-        }*/
-
-
+*{
+background-color: rgb(38, 82, 120);
+}
+#logo{
+border:1px solid red;
+}
 #editor_gbox,#sys_gbox,#page_box,#middle_right{
 color: #408bc8;
 border:2px solid #3573a7;
@@ -210,6 +212,16 @@ background-color:#3572a3;
 #after_btn:hover{
 color:#cecece;
 background-color:#2c5f86;
+}
+#right_win{
+background-color:#1c3b56;
+}
+#project_species{
+background-color: rgb(28, 59, 86);
+border:1px solid rgb(30, 41, 51);
+border-radius:3px;
+color:rgb(230, 221, 197);
+font: 12pt "等线";
 }
         ''')
 
@@ -428,10 +440,81 @@ background-image:url(../image/appimage/mac-96-color.png);
     def addPageWay(self,text:str):
         self.page_way.addItem(text)
 
+
+# 打包程序配置页
+class PyPyinstaller(QWidget):
+    def __init__(self,*args,**kwargs):
+        super(PyPyinstaller, self).__init__(*args,**kwargs)
+
+        self.setObjectName("PyPyinstaller")
+        self.setStyleSheet('''
+*{
+color:#fff;
+background-color: rgb(5, 32, 56);
+}
+#st_win{
+background-color: rgb(17, 61, 98);
+}
+#title{
+font: italic 20pt "Zapfino";
+}
+#label_1,#label_2,#label_3,#label_4,#label_5{
+background-color: rgb(17, 64, 104);
+border-radius:20px;
+}
+#label_1{
+background-color: rgb(30, 189, 98);
+}
+        ''')
+        # 上部分布局
+        self.py_vlay = QVBoxLayout(self)
+        self.head_win = QWidget()
+        self.head_win.setObjectName("head_win")
+        self.head_win.setFixedHeight(150)
+        self.st_win = QStackedWidget()
+        self.st_win.setObjectName("st_win")
+        self.py_vlay.addWidget(self.head_win)
+        self.py_vlay.addWidget(self.st_win)
+
+        # 上部分内部布局
+        self.head_vlay = QVBoxLayout(self.head_win)
+        self.title = QLabel("Py打包程序")
+        self.title.setAlignment(Qt.AlignCenter)
+        self.title.setFixedHeight(100)
+        self.title.setObjectName("title")
+        self.progress_win = QWidget()  # 进度条外框
+        self.progress_win.setFixedHeight(50)
+        self.progress_win.setObjectName("progress_win")
+        self.head_vlay.addWidget(self.title)
+        self.head_vlay.addWidget(self.progress_win)
+
+        Proogess_Size = (40,40)
+        self.progress_win_hlay = QHBoxLayout(self.progress_win)
+        self.progress_win_hlay.setContentsMargins(0,0,0,0)
+        self.progress_win_hlay.setSpacing(3)
+        self.label_1 = QLabel("1")
+        self.label_2 = QLabel("2")
+        self.label_3 = QLabel("3")
+        self.label_4 = QLabel("4")
+        self.label_5 = QLabel("5")
+        lables = [self.label_1,self.label_2,self.label_3,self.label_4,self.label_5]
+        for i,l in enumerate(lables):
+            l.setObjectName("label_{}".format(i+1))
+            l.setFixedSize(*Proogess_Size)
+            l.setAlignment(Qt.AlignCenter)
+            self.progress_win_hlay.addWidget(l)
+
+        # ===
+        self.win1()
+
+    def win1(self):
+        self.pro_entrance_gbox = QGroupBox()
+        self.pro_entrance_gbox.setTitle("项目路径")
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    win = TwoWin()
+    win = PyPyinstaller()
     win.show()
 
     sys.exit(app.exec_())

@@ -206,6 +206,12 @@ font: 12pt "等线";
 #page_new_pro:hover{
 background-color: rgb(0, 0, 181);
 }
+#pro_gbox{
+color: #408bc8;
+border:2px solid #3573a7;
+font: 12pt "等线";
+border-radius:5px;
+}
 '''
         )
 
