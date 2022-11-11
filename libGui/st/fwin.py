@@ -382,13 +382,13 @@ font: 12pt "等线";
 
         if is_system_win:
             self.win_radio.setChecked(True)
-            self.win_radio.setStyleSheet('''
+            self.win_label.setStyleSheet('''
             #win_label{
             background-image: url(../image/appimage/windows-96-color.png);
             }''')
         if is_system_mac:
             self.mac_radio.setChecked(True)
-            self.mac_radio.setStyleSheet('''
+            self.mac_label.setStyleSheet('''
 #mac_label{
 background-image:url(../image/appimage/mac-96-color.png);
 }
@@ -673,7 +673,7 @@ border:1px solid #000;
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    win = PyPyinstaller()
+    win = TwoWin()
     win.show()
 
     sys.exit(app.exec_())
