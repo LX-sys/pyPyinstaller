@@ -68,6 +68,9 @@ background-color: rgb(5, 32, 56);
         # 配置页面提交事件
         self.two_win.submited.connect(self.two_config_event)
 
+        # 返回
+        self.pypyinstaller.afed.connect(lambda :self.setCurrentIndex(1))
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

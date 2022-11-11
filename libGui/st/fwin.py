@@ -28,7 +28,8 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QStackedWidget,
     QTextBrowser,
-    QFileDialog
+    QFileDialog,
+    QMessageBox
 )
 from core.utility import is_system_win,is_system_mac,correctionPath
 
@@ -449,6 +450,7 @@ background-image:url(../image/appimage/mac-96-color.png);
 
 # 打包程序配置页
 class PyPyinstaller(QWidget):
+    afed=pyqtSignal()  # 返回事件
     def __init__(self,*args,**kwargs):
         super(PyPyinstaller, self).__init__(*args,**kwargs)
 
@@ -636,6 +638,7 @@ background-color:#2c5f86;
         self.app_name.setObjectName("app_name")
         self.app_name.setFixedSize(120,30)
         self.app_line = QLineEdit(self.pro_info_gbox)
+        self.app_line.setText("main")  # 默认main
         self.app_line.setObjectName("app_line")
         self.app_line.setFixedSize(220,30)
         self.app_name.move(20,40)
@@ -673,8 +676,9 @@ background-color:#2c5f86;
         self.af_btn.move(10,280)
         self.be_btn.move(80,280)
 
-        # --
+        self.af_btn.clicked.connect(lambda :self.afed.emit())
 
+        # --
 
     # 项目路径事件
     def open_proPath_event(self):
@@ -710,7 +714,7 @@ background-image:url(../image/appimage/python-local-55.png);
 }
                 ''')
 
-    # 径检查
+    # 检查路径的正确性
     def path_detection(self,text,is_mode="dir",f_callback=None,s_callback=None):
         '''
 
@@ -739,8 +743,30 @@ background-image:url(../image/appimage/python-local-55.png);
         if text == "本地环境":
             self.v_image.setStyleSheet("background-image:url(../image/appimage/python-local-55.png);")
 
+    # 选择程序入口文件
+    def choose_entrance_file_event(self):
+        path = QFileDialog.getOpenFileName(self, caption="选择程序入口文件")
+        if path:
+            path = correctionPath(path[0])  # 修正
+            self.show_op_path.setText(path)
+
+    # 选择程序入口文件
+    def win1_next_event(self):
+        if not self.venv_path.text() or\
+            not self.pro_line.text() or\
+            not self.show_op_path.toPlainText():
+            QMessageBox.critical(None, "错误", "信息不完整")
+        else:
+            print("成功")
+
+
     def myEvent(self):
+        # 项目路径事件
         self.pro_open_btn.clicked.connect(self.open_proPath_event)
+
+        # 选择程序入口文件
+        self.op_path_btn.clicked.connect(self.choose_entrance_file_event)
+
         # 路径检查事件
         self.pro_line.textChanged.connect(lambda text:self.path_detection(text,"dir",
                                                                           f_callback=lambda :self.pro_line.setStyleSheet('''border:1px solid red;'''),
@@ -751,6 +777,9 @@ background-image:url(../image/appimage/python-local-55.png);
 
         self.venv_radio.clicked.connect(lambda :self.vl_radio_change_event(self.venv_radio))
         self.local_radio.clicked.connect(lambda :self.vl_radio_change_event(self.local_radio))
+
+        # win1 下一步事件
+        self.be_btn.clicked.connect(self.win1_next_event)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
