@@ -9,6 +9,7 @@
     多页面分离
 '''
 
+import os
 import sys
 from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt
 from PyQt5.QtWidgets import (
@@ -26,9 +27,11 @@ from PyQt5.QtWidgets import (
     QRadioButton,
     QListWidgetItem,
     QStackedWidget,
-    QTextBrowser
+    QTextBrowser,
+    QFileDialog
 )
-from core.utility import is_system_win,is_system_mac
+from core.utility import is_system_win,is_system_mac,correctionPath
+
 
 # 首页(1)
 class FirstWin(QWidget):
@@ -380,6 +383,8 @@ font: 12pt "等线";
         self.before_btn.clicked.connect(lambda :self.beforeed.emit())
         self.after_btn.clicked.connect(lambda :self.submited.emit(self.info))
 
+        self.win_radio.setEnabled(False)
+        self.mac_radio.setEnabled(False)
         if is_system_win:
             self.win_radio.setChecked(True)
             self.win_label.setStyleSheet('''
@@ -505,10 +510,11 @@ background-color: rgb(30, 189, 98);
             l.setFixedSize(*Proogess_Size)
             l.setAlignment(Qt.AlignCenter)
             self.progress_win_hlay.addWidget(l)
-
-
         # ===
         self.win1()
+
+        #===
+        self.myEvent()
 
     def win1(self):
         self.win1 = QWidget()
@@ -574,9 +580,6 @@ background-color:#3572a3;
 #be_btn:hover{
 background-color:#2c5f86;
 }
-#v_image{
-border:1px solid #000;
-}
         ''')
         self.st_win.addWidget(self.win1)
 
@@ -614,7 +617,7 @@ border:1px solid #000;
         self.venv_radio = QRadioButton("虚拟环境",self.pro_entrance_gbox)
         self.venv_radio.setObjectName("venv_radio")
         self.venv_radio.setFixedSize(*V_Radio)
-        self.v_image = QLabel("图片",self.pro_entrance_gbox)
+        self.v_image = QLabel(self.pro_entrance_gbox)
         self.v_image.setObjectName("v_image")
         self.v_image.setFixedSize(55,55)
         self.local_radio = QRadioButton("本地环境",self.pro_entrance_gbox)
@@ -670,10 +673,89 @@ border:1px solid #000;
         self.af_btn.move(10,280)
         self.be_btn.move(80,280)
 
+        # --
+
+
+    # 项目路径事件
+    def open_proPath_event(self):
+        directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
+        if directory_path:
+            directory_path = correctionPath(directory_path)  # 修正路径
+            self.pro_line.setText(directory_path)
+            print("Dsa")
+
+            if is_system_win:
+                interpreter_path = os.path.join(directory_path, "venv", "Scripts", "python.exe")
+            if is_system_mac:
+                interpreter_path = os.path.join(directory_path, "venv", "bin", "python")
+
+            interpreter_path = correctionPath(interpreter_path)
+            print("-->",interpreter_path)
+            if os.path.isfile(interpreter_path):
+                self.venv_radio.setChecked(True)
+                interpreter_path = correctionPath(interpreter_path)
+                self.venv_path.setText(interpreter_path)
+                self.v_image.setStyleSheet('''
+                #v_image{
+background-image:url(../image/appimage/python-venv-55.png);
+}
+                ''')
+            else:
+                self.venv_path.clear()
+                self.local_radio.setChecked(True)
+                self.venv_path.setPlaceholderText("没有找到虚拟环境")
+                self.v_image.setStyleSheet('''
+                #v_image{
+background-image:url(../image/appimage/python-local-55.png);
+}
+                ''')
+
+    # 径检查
+    def path_detection(self,text,is_mode="dir",f_callback=None,s_callback=None):
+        '''
+
+        :param text: 内容
+        :param is_mode:
+        :param f_callback: 失败调用的回调函数
+        :param s_callback: 成功调用的回调函数
+        :return:
+        '''
+        if is_mode == "dir":
+            res = os.path.isdir(text)
+        if is_mode == "file":
+            res = os.path.isfile(text)
+        if res:
+            if s_callback:
+                s_callback()
+        else:
+            if f_callback:
+                f_callback()
+
+    # 虚拟和本地单选按钮切换事件
+    def vl_radio_change_event(self,obj:QRadioButton):
+        text = obj.text()
+        if text == "虚拟环境":
+            self.v_image.setStyleSheet("background-image:url(../image/appimage/python-venv-55.png);")
+        if text == "本地环境":
+            self.v_image.setStyleSheet("background-image:url(../image/appimage/python-local-55.png);")
+
+    def myEvent(self):
+        self.pro_open_btn.clicked.connect(self.open_proPath_event)
+        # 路径检查事件
+        self.pro_line.textChanged.connect(lambda text:self.path_detection(text,"dir",
+                                                                          f_callback=lambda :self.pro_line.setStyleSheet('''border:1px solid red;'''),
+                                                                          s_callback=lambda :self.pro_line.setStyleSheet('''border:1px solid #000;''')))
+        self.venv_path.textChanged.connect(lambda text:self.path_detection(text,"file",
+                                                                           f_callback=lambda :self.venv_path.setStyleSheet('''border-color:red;'''),
+                                                                           s_callback=lambda :self.venv_path.setStyleSheet('''border-color:rgb(30, 41, 51);''')))
+
+        self.venv_radio.clicked.connect(lambda :self.vl_radio_change_event(self.venv_radio))
+        self.local_radio.clicked.connect(lambda :self.vl_radio_change_event(self.local_radio))
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    win = TwoWin()
+    win = PyPyinstaller()
     win.show()
 
     sys.exit(app.exec_())
