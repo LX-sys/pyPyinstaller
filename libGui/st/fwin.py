@@ -519,6 +519,9 @@ background-color: rgb(30, 189, 98);*/
 
         #===
         self.myEvent()
+        # 全局页面索引
+        self.PageInfo = 0
+
         self.st_win.setCurrentIndex(0)
         self.exter_info = dict()
 
@@ -732,8 +735,6 @@ color:#11a611;
 }
 ''')
 
-        self.changeBarShow(1)
-
         self.win2_vlay = QVBoxLayout(self.win2)
         self.win2_vlay.setContentsMargins(0,0,0,0)
         self.win2_vlay.setSpacing(0)
@@ -784,6 +785,10 @@ color:#11a611;
     def open_proPath_event(self):
         directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
         if directory_path:
+            self.textBrowser_out.clear()
+            self.btn_detection.setText("检测")
+            self.btn_detection.setStyleSheet("background-color: rgba(255, 223, 118, 200);")
+
             directory_path = correctionPath(directory_path)  # 修正路径
             self.pro_line.setText(directory_path)
             print("Dsa")
@@ -850,15 +855,27 @@ background-image:url(../image/appimage/python-local-55.png);
             path = correctionPath(path[0])  # 修正
             self.show_op_path.setText(path)
 
-    # 选择程序入口文件
-    def win1_next_event(self):
-        if not self.venv_path.text() or\
-            not self.pro_line.text() or\
-            not self.show_op_path.toPlainText():
-            QMessageBox.critical(None, "错误", "信息不完整")
-        else:
-            self.st_win.setCurrentIndex(1)
-            print("成功")
+    # 翻页事件
+    def turn_page_event(self,direction:str="next"):
+        Flag = True # 标记是否翻页
+
+        if self.PageInfo == 0:
+            if not self.venv_path.text() or \
+                    not self.pro_line.text() or \
+                    not self.show_op_path.toPlainText():
+                QMessageBox.critical(None, "错误", "信息不完整")
+                Flag = False
+
+        if Flag and direction == "top":
+            self.PageInfo -= 1
+
+        if Flag and direction == "next":
+            self.PageInfo += 1
+
+        if Flag:
+            self.changeBarShow(self.PageInfo)
+            self.st_win.setCurrentIndex(self.PageInfo)
+
 
     # 配置检测
     def detection_event(self):
@@ -978,7 +995,7 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # 显示外部信息
         self.outDetection("打包程序类型:{}".format(self.exter_info["scriptType"]))
-        self.outDetection("编辑名称:{}".format(self.exter_info["editName"]))
+        self.outDetection("编辑器名称:{}".format(self.exter_info["editName"]))
         self.outDetection("当前操作系统:{}".format(self.exter_info["sys"]))
 
         # =====
@@ -1013,7 +1030,9 @@ background-image:url(../image/appimage/python-local-55.png);
         self.btn_detection.clicked.connect(self.detection_event)
 
         # win1 下一步事件
-        self.be_btn.clicked.connect(self.win1_next_event)
+        self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))
+        # win1 返回事件
+        self.af_btn_1.clicked.connect(lambda :self.turn_page_event(direction="top"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
