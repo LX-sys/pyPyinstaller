@@ -57,7 +57,8 @@ background-color: rgb(5, 32, 56);
     #
     def two_config_event(self,info:dict):
         self.setCurrentIndex(2)
-        print(info)
+        # print(info)
+        self.pypyinstaller.setExternalInfo(info)
 
     # 事件
     def myevent(self):

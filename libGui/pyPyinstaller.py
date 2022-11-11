@@ -658,9 +658,11 @@ background-color:#272727;
 
         # 操作系统
         self.outDetection("操作系统: {}".format(self.page_info["op_sys"]))
+
         # 打包程序名称
         self.page_info["app_name"] = self.line_app_name.text()
         self.outDetection("可执行程序名称: {}".format(self.page_info["app_name"]))
+
 
         # ==========
         self.detection_btn.setEnabled(True)  # 解放检测按钮

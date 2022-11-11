@@ -11,6 +11,7 @@
 
 import os
 import sys
+import subprocess
 from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt
 from PyQt5.QtWidgets import (
     QApplication,
@@ -471,8 +472,8 @@ font: italic 20pt "Zapfino";
 background-color: rgb(17, 64, 104);
 border-radius:20px;
 }
-#label_1{
-background-color: rgb(30, 189, 98);
+/*#label_1{
+background-color: rgb(30, 189, 98);*/
 }
         ''')
         # 上部分布局
@@ -514,10 +515,18 @@ background-color: rgb(30, 189, 98);
             self.progress_win_hlay.addWidget(l)
         # ===
         self.win1()
+        self.win2()
 
         #===
         self.myEvent()
+        self.st_win.setCurrentIndex(0)
+        self.exter_info = dict()
 
+    # 接收来自 初始配置页信息
+    def setExternalInfo(self,info):
+        self.exter_info = info
+
+    # 配置界面
     def win1(self):
         self.win1 = QWidget()
         self.win1.setObjectName("win1")
@@ -584,6 +593,8 @@ background-color:#2c5f86;
 }
         ''')
         self.st_win.addWidget(self.win1)
+
+        self.changeBarShow(0)
 
         self.win_glay = QGridLayout(self.win1)
         self.win_glay.setContentsMargins(3,3,3,3)
@@ -680,6 +691,95 @@ background-color:#2c5f86;
 
         # --
 
+    # 检测界面
+    def win2(self):
+        self.win2 = QWidget()
+        self.win2.setObjectName("win2")
+        self.st_win.addWidget(self.win2)
+        self.win2.setStyleSheet('''
+*{
+background-color: rgb(17, 61, 98);
+color:#fff;
+font: 12pt "等线";
+}
+#btn_detection{
+border:1px solid rgb(255, 223, 118);
+border-radius:6px;
+background-color: rgba(255, 223, 118, 200);
+font-size:16pt;
+}
+#btn_detection:hover{
+border-width:2px;
+}
+#af_btn_1,#be_btn_1{
+border-radius:4px;
+}
+#af_btn_1{
+background-color: gray;
+}
+#af_btn_1:hover{
+background-color:#555656;
+}
+#be_btn_1{
+background-color:#3572a3;
+}
+#be_btn_1:hover{
+background-color:#2c5f86;
+}
+#textBrowser_out{
+background-color: rgb(30, 41, 51);
+color:#11a611;
+}
+''')
+
+        self.changeBarShow(1)
+
+        self.win2_vlay = QVBoxLayout(self.win2)
+        self.win2_vlay.setContentsMargins(0,0,0,0)
+        self.win2_vlay.setSpacing(0)
+        self.win2_top = QWidget()
+        self.win2_buttom = QWidget()
+        self.win2_top.setObjectName("win2_top")
+        self.win2_buttom.setObjectName("win2_buttom")
+        self.win2_top.setFixedHeight(90)
+        self.win2_vlay.addWidget(self.win2_top)
+        self.win2_vlay.addWidget(self.win2_buttom)
+
+        # win2_top 内部
+        self.btn_detection = QPushButton("检测",self.win2_top)
+        self.btn_detection.setObjectName("btn_detection")
+        self.btn_detection.setFixedSize(110,50)
+        self.btn_detection.move(20,25)
+
+        self.af_btn_1 = QPushButton("返回",self.win2_top)
+        self.be_btn_1 = QPushButton("下一步",self.win2_top)
+        self.af_btn_1.setObjectName("af_btn_1")
+        self.be_btn_1.setObjectName("be_btn_1")
+        self.af_btn_1.setFixedSize(100,45)
+        self.be_btn_1.setFixedSize(110,45)
+        self.af_btn_1.move(700,25)
+        self.be_btn_1.move(820,25)
+
+        # win2_buttom 内部
+        self.win2_b_vlay = QVBoxLayout(self.win2_buttom)
+        self.win2_b_vlay.setContentsMargins(3,3,3,3)
+        self.textBrowser_out = QTextBrowser()
+        self.textBrowser_out.setObjectName("textBrowser_out")
+        self.win2_b_vlay.addWidget(self.textBrowser_out)
+
+    # 切换进度展示
+    def changeBarShow(self,index=0):
+        lables = [self.label_1, self.label_2, self.label_3, self.label_4, self.label_5]
+        for i,l in enumerate(lables):
+            if i == index:
+                l.setStyleSheet("background-color: rgb(30, 189, 98);")
+            else:
+                l.setStyleSheet("background-color: rgb(17, 64, 104);")
+
+    # 输出到检测界面
+    def outDetection(self,text):
+        self.textBrowser_out.append(text)
+
     # 项目路径事件
     def open_proPath_event(self):
         directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
@@ -757,7 +857,138 @@ background-image:url(../image/appimage/python-local-55.png);
             not self.show_op_path.toPlainText():
             QMessageBox.critical(None, "错误", "信息不完整")
         else:
+            self.st_win.setCurrentIndex(1)
             print("成功")
+
+    # 配置检测
+    def detection_event(self):
+        print(self.exter_info)
+        self.textBrowser_out.clear()
+        self.outDetection("检测中...")
+        self.btn_detection.setEnabled(False) # 检测中按钮不可用
+        detection_res = None  # 检测结果标记
+
+        # 检测项目目录
+        pro_line_text = self.pro_line.text()
+        if os.path.isdir(pro_line_text):
+            self.outDetection("项目目录: {}".format(pro_line_text))
+        else:
+            # self.outDetection("项目目录: {}".format(pro_line_text))
+            self.outDetection("项目目录: {}".format("找不到项目"))
+            detection_res = False
+
+        # 检测程序入口文件
+        entrance_text = self.show_op_path.toPlainText()
+        if os.path.isfile(entrance_text):
+            self.outDetection("程序入口文件路径:{}".format(entrance_text))
+        else:
+            self.outDetection("程序入口文件路径:不存在")
+            detection_res = False
+
+        # 检测虚拟环境
+        venv_path = self.venv_path.text() # 虚拟环境路径
+        ra_text ="虚拟环境" if self.venv_radio.isChecked() else "本地环境"
+        if os.path.isfile(venv_path):
+            self.outDetection("{}: {}".format(ra_text,venv_path))
+        else:
+            self.outDetection("{}: 不存在".format(ra_text))
+            detection_res = False
+
+        # 检测python 版本
+        try:
+            if is_system_win:
+                cmd = "{} -V".format(venv_path)
+            if is_system_mac:
+                cmd ="'{}' -V".format(venv_path)
+            po = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
+            python_v = po.communicate()[0].decode("utf-8")
+            if is_system_win:
+                python_v = python_v.replace("\r\n","")
+            if is_system_mac:
+                python_v = python_v.replace("\n", "")
+            self.outDetection("{}python版本: {}".format(ra_text,python_v))
+        except Exception as e:
+            print(e)
+            self.outDetection("{}python版本: 没找到python".format(ra_text))
+            detection_res = False
+
+        # 打包方式
+        pageWay = self.exter_info["pageWay"]
+        self.outDetection("打包方式:{}".format(pageWay))
+
+        if pageWay == "Pyinstaller":
+            pageWay = "pyinstaller"
+        if pageWay == "Nuitka":
+            pageWay = "Nuitka"
+
+        # 检测pyinstaller/Nuitka有没有安装
+        try:
+            if is_system_win:
+                cmd = "{} -m pip list".format(self.venv_path.text())
+            if is_system_mac:
+                cmd ="'{}' -m pip list".format(self.venv_path.text())
+
+            pyin = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
+            piplist = pyin.communicate()[0].decode("utf-8")
+            if is_system_win:
+                piplist = piplist.split("\r\n")
+            if is_system_mac:
+                piplist = piplist.split("\n")
+            is_pyinstaller = False
+            for module_name in piplist[3:]:
+                if pageWay in module_name:
+                    self.outDetection("{}是否安装: 已安装".format(pageWay))
+                    is_pyinstaller = True
+                    break
+            if is_pyinstaller is False:
+                self.outDetection("{}是否安装: 没有安装,请安装 pip install {}".format(pageWay,pageWay))
+                detection_res = False
+        except:
+            self.outDetection("{}是否安装: 没有找到python".format(pageWay))
+            detection_res = False
+
+        # 检测gcc(这个仅对Nuitka有效)
+        if pageWay == "Nuitka":
+            try:
+                cmd = "gcc -v"
+                gcc_v = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
+                # print(gcc_v.communicate())
+                gcc_info = gcc_v.communicate()[0].decode("utf-8")
+                if not gcc_info:
+                    self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc,请先下载MinGW64"))
+                    detection_res = False
+                else:
+                    self.outDetection("GCC是否安装:{}".format("已安装"))
+            except Exception as e:
+                print(e)
+                self.outDetection("GCC是否安装:{}".format("没有安装gcc,请先下载MinGW64"))
+                detection_res = False
+                pass
+
+        # 终端窗口
+        terminal_i = self.terminal_comboBox.currentIndex()
+        self.outDetection("是否需要终端窗口: {}".format("需要" if terminal_i==0 else "不需要"))
+
+        # 打包生成方法
+        app_i = self.app_comboBox.currentIndex()
+        self.outDetection("打包生成方法: {}".format("生成单一程序" if app_i==0 else "包含其他文件"))
+
+        # 打包程序名称
+        self.outDetection("可执行程序名称: {}".format(self.app_line.text()))
+
+        # 显示外部信息
+        self.outDetection("打包程序类型:{}".format(self.exter_info["scriptType"]))
+        self.outDetection("编辑名称:{}".format(self.exter_info["editName"]))
+        self.outDetection("当前操作系统:{}".format(self.exter_info["sys"]))
+
+        # =====
+        self.btn_detection.setEnabled(True)  # 解放按钮
+        if detection_res is None:
+            self.btn_detection.setText("检测通过")
+            self.btn_detection.setStyleSheet("background-color: rgb(0, 170, 0);")
+        else:
+            self.btn_detection.setText("检测失败")
+            self.btn_detection.setStyleSheet("background-color: red;")
 
 
     def myEvent(self):
@@ -777,6 +1008,9 @@ background-image:url(../image/appimage/python-local-55.png);
 
         self.venv_radio.clicked.connect(lambda :self.vl_radio_change_event(self.venv_radio))
         self.local_radio.clicked.connect(lambda :self.vl_radio_change_event(self.local_radio))
+
+        # 配置检测事件
+        self.btn_detection.clicked.connect(self.detection_event)
 
         # win1 下一步事件
         self.be_btn.clicked.connect(self.win1_next_event)
