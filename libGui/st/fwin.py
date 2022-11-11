@@ -452,6 +452,7 @@ class PyPyinstaller(QWidget):
 color:#fff;
 background-color: rgb(5, 32, 56);
 }
+
 #st_win{
 background-color: rgb(17, 61, 98);
 }
@@ -504,12 +505,50 @@ background-color: rgb(30, 189, 98);
             l.setAlignment(Qt.AlignCenter)
             self.progress_win_hlay.addWidget(l)
 
+
         # ===
         self.win1()
 
     def win1(self):
+        self.win1 = QWidget()
+        self.win1.setObjectName("win1")
+        self.win1.setStyleSheet('''
+*{
+background-color: rgb(17, 61, 98);
+color:#fff;
+font: 12pt "等线";
+}
+QGroupBox{
+border:3px dashed rgb(51, 109, 158);
+border-radius:15px;
+}
+
+#pro_show_w{
+border:3px dashed rgb(51, 109, 158);
+}
+
+        ''')
+        self.st_win.addWidget(self.win1)
+
+        self.win_glay = QGridLayout(self.win1)
+        self.win_glay.setContentsMargins(3,3,3,3)
+        self.win_glay.setSpacing(7)
         self.pro_entrance_gbox = QGroupBox()
+        self.pro_entrance_gbox.setObjectName("pro_entrance_gbox")
         self.pro_entrance_gbox.setTitle("项目路径")
+        self.pro_entrance_gbox.setFixedSize(950,240)
+
+        self.pro_info_gbox = QGroupBox()
+        self.pro_info_gbox.setObjectName("pro_info_gbox")
+        self.pro_info_gbox.setTitle("项目信息")
+        self.pro_info_gbox.setFixedSize(500,340)
+
+        self.pro_show_w = QWidget()
+        self.pro_show_w.setObjectName("pro_show_w")
+        self.pro_show_w.setFixedSize(440,340)
+        self.win_glay.addWidget(self.pro_entrance_gbox,0,0,1,2)
+        self.win_glay.addWidget(self.pro_info_gbox,1,0,1,1)
+        self.win_glay.addWidget(self.pro_show_w,1,1,1,1)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

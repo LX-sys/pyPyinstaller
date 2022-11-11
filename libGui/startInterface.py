@@ -29,13 +29,13 @@ class StartInterface(QStackedWidget):
         self.setObjectName("StartInterface")
         self.resize(1000, 800)
         self.setStyleSheet('''
-*{
-background-color: rgb(38, 82, 120);
+#StartInterface{
+background-color: rgb(5, 32, 56);
 }
 ''')
 
         # 创建两个窗口
-        self.first_win = FirstWin()  # 用QLabel播放视频
+        self.first_win = FirstWin()  #
         self.two_win = TwoWin()
         self.pypyinstaller = PyPyinstaller()
         self.addWidget(self.first_win)
