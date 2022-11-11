@@ -25,7 +25,8 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QRadioButton,
     QListWidgetItem,
-    QStackedWidget
+    QStackedWidget,
+    QTextBrowser
 )
 from core.utility import is_system_win,is_system_mac
 
@@ -522,11 +523,60 @@ QGroupBox{
 border:3px dashed rgb(51, 109, 158);
 border-radius:15px;
 }
-
 #pro_show_w{
 border:3px dashed rgb(51, 109, 158);
 }
-
+#pro_line,#pro_open_btn{
+border:1px solid #000;
+}
+#pro_line{
+border-right:none;
+}
+#pro_open_btn{
+border-left:none;
+background-color: #000;
+}
+#pro_open_btn:hover{
+background-color: rgb(51, 109, 158);
+}
+#venv_path{
+border:2px solid rgb(30, 41, 51);
+border-top:none;
+border-left:none;
+border-right:none;
+}
+#app_entrance_label{
+color:rgb(255, 62, 23);
+}
+#app_line{
+border:1px solid rgb(85, 170, 255);
+border-radius:2px;
+}
+#op_path_btn{
+background-color: rgb(51, 109, 158);
+border-radius:2px;
+}
+#op_path_btn:hover{
+background-color: #28567c;
+}
+#af_btn,#be_btn{
+border-radius:4px;
+}
+#af_btn{
+background-color: gray;
+}
+#af_btn:hover{
+background-color:#555656;
+}
+#be_btn{
+background-color:#3572a3;
+}
+#be_btn:hover{
+background-color:#2c5f86;
+}
+#v_image{
+border:1px solid #000;
+}
         ''')
         self.st_win.addWidget(self.win1)
 
@@ -535,7 +585,7 @@ border:3px dashed rgb(51, 109, 158);
         self.win_glay.setSpacing(7)
         self.pro_entrance_gbox = QGroupBox()
         self.pro_entrance_gbox.setObjectName("pro_entrance_gbox")
-        self.pro_entrance_gbox.setTitle("项目路径")
+        self.pro_entrance_gbox.setTitle("项目路径设置")
         self.pro_entrance_gbox.setFixedSize(950,240)
 
         self.pro_info_gbox = QGroupBox()
@@ -549,6 +599,76 @@ border:3px dashed rgb(51, 109, 158);
         self.win_glay.addWidget(self.pro_entrance_gbox,0,0,1,2)
         self.win_glay.addWidget(self.pro_info_gbox,1,0,1,1)
         self.win_glay.addWidget(self.pro_show_w,1,1,1,1)
+
+        # 项目路径内部布局
+        self.pro_line = QLineEdit(self.pro_entrance_gbox)
+        self.pro_line.setObjectName("pro_line")
+        self.pro_line.setFixedSize(660,30)
+        self.pro_open_btn = QPushButton("...",self.pro_entrance_gbox)
+        self.pro_open_btn.setObjectName("pro_open_btn")
+        self.pro_open_btn.setFixedSize(75,30)
+        self.pro_line.move(90,30)
+        self.pro_open_btn.move(750,30)
+
+        V_Radio = (90,25)
+        self.venv_radio = QRadioButton("虚拟环境",self.pro_entrance_gbox)
+        self.venv_radio.setObjectName("venv_radio")
+        self.venv_radio.setFixedSize(*V_Radio)
+        self.v_image = QLabel("图片",self.pro_entrance_gbox)
+        self.v_image.setObjectName("v_image")
+        self.v_image.setFixedSize(55,55)
+        self.local_radio = QRadioButton("本地环境",self.pro_entrance_gbox)
+        self.local_radio.setObjectName("local_radio")
+        self.local_radio.setFixedSize(*V_Radio)
+        self.venv_path = QLineEdit(self.pro_entrance_gbox)
+        self.venv_path.setObjectName("venv_path")
+        self.venv_path.setFixedSize(730,30)
+        self.venv_radio.move(90,100)
+        self.v_image.move(420,80)
+        self.local_radio.move(730,100)
+        self.venv_path.move(90,170)
+
+        # 项目信息部分
+        self.app_name = QLabel("可执行程序名称",self.pro_info_gbox)
+        self.app_name.setObjectName("app_name")
+        self.app_name.setFixedSize(120,30)
+        self.app_line = QLineEdit(self.pro_info_gbox)
+        self.app_line.setObjectName("app_line")
+        self.app_line.setFixedSize(220,30)
+        self.app_name.move(20,40)
+        self.app_line.move(150,40)
+        self.terminal_comboBox = QComboBox(self.pro_info_gbox)
+        self.terminal_comboBox.setObjectName("terminal_comboBox")
+        self.terminal_comboBox.addItems(["带终端窗口","不带终端窗口"])
+        self.terminal_comboBox.setFixedSize(130,30)
+        self.app_comboBox = QComboBox(self.pro_info_gbox)
+        self.app_comboBox.setObjectName("terminal_comboBox")
+        self.app_comboBox.addItems(["打包成单一程序","包含文件夹"])
+        self.app_comboBox.setFixedSize(140,30)
+        self.terminal_comboBox.move(20,95)
+        self.app_comboBox.move(240,95)
+        self.app_entrance_label = QLabel("程序入口文件路径(这个路径直接决定你的程序是否能正常运行)*",self.pro_info_gbox)
+        self.app_entrance_label.setObjectName("app_entrance_label")
+        self.app_entrance_label.setFixedSize(460,20)
+        self.app_entrance_label.move(20,150)
+        self.op_path_btn = QPushButton("选择路径",self.pro_info_gbox)
+        self.op_path_btn.setObjectName("op_path_btn")
+        self.op_path_btn.setFixedSize(80,40)
+        self.op_path_btn.move(20,180)
+        self.show_op_path = QTextBrowser(self.pro_info_gbox)
+        self.show_op_path.setObjectName("show_op_path")
+        self.show_op_path.setFixedSize(460,90)
+        self.show_op_path.move(20,230)
+
+        # self.pro_show_w上面的布局
+        self.af_btn = QPushButton("返回",self.pro_show_w)
+        self.af_btn.setObjectName("af_btn")
+        self.af_btn.setFixedSize(65,50)
+        self.be_btn = QPushButton("下一步",self.pro_show_w)
+        self.be_btn.setObjectName("be_btn")
+        self.be_btn.setFixedSize(350,50)
+        self.af_btn.move(10,280)
+        self.be_btn.move(80,280)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
