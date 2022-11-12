@@ -32,6 +32,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox
 )
+from libGui.tree import Tree
 from core.utility import is_system_win,is_system_mac,correctionPath
 
 
@@ -519,6 +520,7 @@ background-color: rgb(30, 189, 98);*/
         # ===
         self.win1()
         self.win2()
+        self.win3()
 
         #===
         self.myEvent()
@@ -774,6 +776,83 @@ color:#11a611;
         self.textBrowser_out.setObjectName("textBrowser_out")
         self.win2_b_vlay.addWidget(self.textBrowser_out)
 
+    # 选择打包资源界面
+    def win3(self):
+        self.win3 = QWidget()
+        self.win3.setObjectName("win3")
+        self.st_win.addWidget(self.win3)
+        self.win3.setStyleSheet('''
+#tree{
+/*border:2px solid rgb(66, 129, 178);*/
+border:none;
+color:rgb(255, 213, 79);
+font: 13pt "等线";
+}
+#tree::branch:closed:has-children:has-siblings,#tree::branch:open:has-children:!has-siblings {
+image:url(../image/appimage/tree-chevron-right-16.png);
+}
+#tree::branch:closed:has-children:!has-siblings,#tree::branch:open:has-children:!has-siblings{
+image:url(../image/appimage/tree-chevron-down-16.png);
+}
+#trw_top,#trw_bottom{
+border-left:1px solid rgb(66, 129, 178);
+}
+#af_btn_2,#be_btn_2{
+border-radius:4px;
+}
+#af_btn_2{
+background-color: gray;
+}
+#af_btn_2:hover{
+background-color:#555656;
+}
+#be_btn_2{
+background-color:#3572a3;
+}
+#be_btn_2:hover{
+background-color:#2c5f86;
+}
+        ''')
+
+        #
+        self.win3_hlay = QHBoxLayout(self.win3)
+        self.win3_hlay.setContentsMargins(0,0,0,0)
+        self.win3_hlay.setSpacing(0)
+        self.tree = Tree()
+        self.tree.header().hide()
+        self.tree.setObjectName("tree")
+        self.tree.setFixedWidth(500)
+
+        self.tree_right_w = QWidget()
+        self.tree_right_w.setObjectName("tree_right_w")
+
+        self.win3_hlay.addWidget(self.tree)
+        self.win3_hlay.addWidget(self.tree_right_w)
+
+        # tree_right_w 上下两部分
+        self.trw_vlay = QVBoxLayout(self.tree_right_w)
+        self.trw_vlay.setContentsMargins(0,0,0,0)
+        self.trw_vlay.setSpacing(0)
+        self.trw_top = QWidget()
+        self.trw_bottom = QWidget()
+        self.trw_top.setObjectName("trw_top")
+        self.trw_bottom.setObjectName("trw_bottom")
+        self.trw_bottom.setFixedHeight(60)
+        self.trw_vlay.addWidget(self.trw_top)
+        self.trw_vlay.addWidget(self.trw_bottom)
+
+        # trw_bottom内部布局
+        self.trw_bottom_hlay = QHBoxLayout(self.trw_bottom)
+        self.af_btn_2 = QPushButton("返回")
+        self.be_btn_2 = QPushButton("下一步")
+        self.af_btn_2.setObjectName("af_btn_2")
+        self.be_btn_2.setObjectName("be_btn_2")
+        self.af_btn_2.setFixedSize(60,45)
+        self.be_btn_2.setFixedHeight(45)
+        self.trw_bottom_hlay.addWidget(self.af_btn_2)
+        self.trw_bottom_hlay.addWidget(self.be_btn_2)
+
+
     # 切换进度展示
     def changeBarShow(self,index=0):
         lables = [self.label_1, self.label_2, self.label_3, self.label_4, self.label_5]
@@ -869,10 +948,11 @@ background-image:url(../image/appimage/python-local-55.png);
                     not self.pro_line.text() or \
                     not self.show_op_path.toPlainText():
                 QMessageBox.critical(None, "错误", "信息不完整")
-                Flag = False
+                return
 
         if self.PageInfo == 1:
             if direction == "top":
+                self.tree.clear() # 清空项目树
                 self.textBrowser_out.clear()
                 self.btn_detection.setText("检测")
                 self.btn_detection.setStyleSheet("background-color: rgba(255, 223, 118, 200);")
@@ -882,8 +962,23 @@ background-image:url(../image/appimage/python-local-55.png);
                     return
                 if not self.detection_res:
                     QMessageBox.critical(None, "警告", "检测未通過")
-                    Flag = False
+                    return
 
+                # 通过,创建项目数
+                self.tree.openTree(self.pro_line.text())
+
+        if self.PageInfo == 2:
+            if direction == "top":
+                yes = QMessageBox.question(None,"确定?","返回是否清除已选项",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+                if yes == QMessageBox.Yes:
+                    self.tree.clear()
+
+            if direction == "next":
+                if not self.tree.getStateFiles():
+                    QMessageBox.critical(None, "错误", "没有选择任何打包项")
+                    return
+            # 成功
+            print(self.tree.getStateFiles())
 
         if Flag and direction == "top":
             self.PageInfo -= 1
@@ -1050,9 +1145,12 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # win1 下一步事件 -0
         self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))
-        # win1 返回事件 -1
+        # win2 返回事件 -1
         self.af_btn_1.clicked.connect(lambda :self.turn_page_event(direction="top"))
         self.be_btn_1.clicked.connect(lambda :self.turn_page_event(direction="next"))
+        # win3 事件 -2
+        self.af_btn_2.clicked.connect(lambda :self.turn_page_event(direction="top"))
+        self.be_btn_2.clicked.connect(lambda :self.turn_page_event(direction="next"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
