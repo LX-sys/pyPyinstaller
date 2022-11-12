@@ -455,6 +455,9 @@ class PyPyinstaller(QWidget):
     def __init__(self,*args,**kwargs):
         super(PyPyinstaller, self).__init__(*args,**kwargs)
 
+        # 配置檢測
+        self.detection_res = None
+
         self.setObjectName("PyPyinstaller")
         self.setStyleSheet('''
 *{
@@ -538,6 +541,9 @@ background-color: rgb(30, 189, 98);*/
 background-color: rgb(17, 61, 98);
 color:#fff;
 font: 12pt "等线";
+}
+#pro_entrance_gbox,#pro_info_gbox{
+color:#50b1fa;;
 }
 QGroupBox{
 border:3px dashed rgb(51, 109, 158);
@@ -791,7 +797,6 @@ color:#11a611;
 
             directory_path = correctionPath(directory_path)  # 修正路径
             self.pro_line.setText(directory_path)
-            print("Dsa")
 
             if is_system_win:
                 interpreter_path = os.path.join(directory_path, "venv", "Scripts", "python.exe")
@@ -799,7 +804,7 @@ color:#11a611;
                 interpreter_path = os.path.join(directory_path, "venv", "bin", "python")
 
             interpreter_path = correctionPath(interpreter_path)
-            print("-->",interpreter_path)
+            # print("-->",interpreter_path)
             if os.path.isfile(interpreter_path):
                 self.venv_radio.setChecked(True)
                 interpreter_path = correctionPath(interpreter_path)
@@ -859,12 +864,26 @@ background-image:url(../image/appimage/python-local-55.png);
     def turn_page_event(self,direction:str="next"):
         Flag = True # 标记是否翻页
 
-        if self.PageInfo == 0:
+        if self.PageInfo == 0 and direction == "next":
             if not self.venv_path.text() or \
                     not self.pro_line.text() or \
                     not self.show_op_path.toPlainText():
                 QMessageBox.critical(None, "错误", "信息不完整")
                 Flag = False
+
+        if self.PageInfo == 1:
+            if direction == "top":
+                self.textBrowser_out.clear()
+                self.btn_detection.setText("检测")
+                self.btn_detection.setStyleSheet("background-color: rgba(255, 223, 118, 200);")
+            if direction == "next":
+                if self.btn_detection.text() == "检测":
+                    QMessageBox.critical(None,"检测","请先检测")
+                    return
+                if not self.detection_res:
+                    QMessageBox.critical(None, "警告", "检测未通過")
+                    Flag = False
+
 
         if Flag and direction == "top":
             self.PageInfo -= 1
@@ -876,14 +895,13 @@ background-image:url(../image/appimage/python-local-55.png);
             self.changeBarShow(self.PageInfo)
             self.st_win.setCurrentIndex(self.PageInfo)
 
-
     # 配置检测
     def detection_event(self):
         print(self.exter_info)
         self.textBrowser_out.clear()
         self.outDetection("检测中...")
         self.btn_detection.setEnabled(False) # 检测中按钮不可用
-        detection_res = None  # 检测结果标记
+        self.detection_res = None  # 重置檢查結果
 
         # 检测项目目录
         pro_line_text = self.pro_line.text()
@@ -892,7 +910,7 @@ background-image:url(../image/appimage/python-local-55.png);
         else:
             # self.outDetection("项目目录: {}".format(pro_line_text))
             self.outDetection("项目目录: {}".format("找不到项目"))
-            detection_res = False
+            self.detection_res = False
 
         # 检测程序入口文件
         entrance_text = self.show_op_path.toPlainText()
@@ -900,7 +918,7 @@ background-image:url(../image/appimage/python-local-55.png);
             self.outDetection("程序入口文件路径:{}".format(entrance_text))
         else:
             self.outDetection("程序入口文件路径:不存在")
-            detection_res = False
+            self.detection_res = False
 
         # 检测虚拟环境
         venv_path = self.venv_path.text() # 虚拟环境路径
@@ -909,7 +927,7 @@ background-image:url(../image/appimage/python-local-55.png);
             self.outDetection("{}: {}".format(ra_text,venv_path))
         else:
             self.outDetection("{}: 不存在".format(ra_text))
-            detection_res = False
+            self.detection_res = False
 
         # 检测python 版本
         try:
@@ -927,7 +945,7 @@ background-image:url(../image/appimage/python-local-55.png);
         except Exception as e:
             print(e)
             self.outDetection("{}python版本: 没找到python".format(ra_text))
-            detection_res = False
+            self.detection_res = False
 
         # 打包方式
         pageWay = self.exter_info["pageWay"]
@@ -959,10 +977,10 @@ background-image:url(../image/appimage/python-local-55.png);
                     break
             if is_pyinstaller is False:
                 self.outDetection("{}是否安装: 没有安装,请安装 pip install {}".format(pageWay,pageWay))
-                detection_res = False
+                self.detection_res = False
         except:
             self.outDetection("{}是否安装: 没有找到python".format(pageWay))
-            detection_res = False
+            self.detection_res = False
 
         # 检测gcc(这个仅对Nuitka有效)
         if pageWay == "Nuitka":
@@ -973,13 +991,13 @@ background-image:url(../image/appimage/python-local-55.png);
                 gcc_info = gcc_v.communicate()[0].decode("utf-8")
                 if not gcc_info:
                     self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc,请先下载MinGW64"))
-                    detection_res = False
+                    self.detection_res = False
                 else:
                     self.outDetection("GCC是否安装:{}".format("已安装"))
             except Exception as e:
                 print(e)
                 self.outDetection("GCC是否安装:{}".format("没有安装gcc,请先下载MinGW64"))
-                detection_res = False
+                self.detection_res = False
                 pass
 
         # 终端窗口
@@ -1000,7 +1018,8 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # =====
         self.btn_detection.setEnabled(True)  # 解放按钮
-        if detection_res is None:
+        if self.detection_res is None:
+            self.detection_res = True
             self.btn_detection.setText("检测通过")
             self.btn_detection.setStyleSheet("background-color: rgb(0, 170, 0);")
         else:
@@ -1029,10 +1048,11 @@ background-image:url(../image/appimage/python-local-55.png);
         # 配置检测事件
         self.btn_detection.clicked.connect(self.detection_event)
 
-        # win1 下一步事件
+        # win1 下一步事件 -0
         self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))
-        # win1 返回事件
+        # win1 返回事件 -1
         self.af_btn_1.clicked.connect(lambda :self.turn_page_event(direction="top"))
+        self.be_btn_1.clicked.connect(lambda :self.turn_page_event(direction="next"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
