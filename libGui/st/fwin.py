@@ -30,10 +30,11 @@ from PyQt5.QtWidgets import (
     QStackedWidget,
     QTextBrowser,
     QFileDialog,
-    QMessageBox
+    QMessageBox,
+    QProgressBar
 )
 from libGui.tree import Tree
-from core.utility import is_system_win,is_system_mac,correctionPath
+from core.utility import is_system_win,is_system_mac,correctionPath,path_to_unified
 
 
 # 首页(1)
@@ -521,6 +522,7 @@ background-color: rgb(30, 189, 98);*/
         self.win1()
         self.win2()
         self.win3()
+        self.win4()
 
         #===
         self.myEvent()
@@ -852,6 +854,92 @@ background-color:#2c5f86;
         self.trw_bottom_hlay.addWidget(self.af_btn_2)
         self.trw_bottom_hlay.addWidget(self.be_btn_2)
 
+    # 打包
+    def win4(self):
+        self.win4 = QWidget()
+        self.win4.setObjectName("win4")
+        self.st_win.addWidget(self.win4)
+        self.win4.setStyleSheet('''
+/*#win4_top,#win4_bottom{
+border:1px solid red;
+}*/
+#pbar,#textbro_out{
+border:none;
+}
+#pbar::chunk{
+background-color: #11a611;
+}
+#pbar{
+color:#11a611;
+}
+#textbro_out{
+border-top:1px solid #11a611;
+}
+#page_btn{
+border:2px solid rgb(232, 232, 232);
+background-color: rgb(161, 161, 161);
+color: rgb(0, 0, 0);
+border-radius:5px;
+font: 16pt "等线";
+}
+#page_btn:hover{
+border-width:1px;
+}
+#af_btn_3,#be_btn_3{
+border-radius:4px;
+}
+#af_btn_3{
+background-color: gray;
+}
+#af_btn_3:hover{
+background-color:#555656;
+}
+#be_btn_3{
+background-color:#3572a3;
+}
+#be_btn_3:hover{
+background-color:#2c5f86;
+}
+        ''')
+        #
+        self.win4_vlay = QVBoxLayout(self.win4)
+        self.win4_vlay.setSpacing(0)
+        self.win4_top = QWidget()
+        self.win4_top.setObjectName("win4_top")
+        self.win4_top.setFixedHeight(140)
+        self.win4_bottom = QWidget()
+        self.win4_bottom.setObjectName("win4_bottom")
+        self.win4_vlay.addWidget(self.win4_top)
+        self.win4_vlay.addWidget(self.win4_bottom)
+
+        # win4_top
+        self.page_btn = QPushButton("打包",self.win4_top)
+        self.page_btn.setObjectName("page_btn")
+        self.page_btn.setFixedSize(160,50)
+        self.page_btn.move(20,30)
+        self.af_btn_3 = QPushButton("返回",self.win4_top)
+        self.be_btn_3 = QPushButton("下一步",self.win4_top)
+        self.af_btn_3.setObjectName("af_btn_3")
+        self.be_btn_3.setObjectName("be_btn_3")
+        self.af_btn_3.setFixedSize(80,45)
+        self.be_btn_3.setFixedSize(150,45)
+        self.af_btn_3.move(620,30)
+        self.be_btn_3.move(730,30)
+
+        # win4_bottom内部
+        self.w4_bottom_vlay = QVBoxLayout(self.win4_bottom)
+        self.w4_bottom_vlay.setContentsMargins(0,0,0,0)
+        self.w4_bottom_vlay.setSpacing(0)
+        self.pbar = QProgressBar()
+        self.pbar.setObjectName("pbar")
+        self.pbar.setFixedHeight(12)
+        self.pbar.setMaximum(100)
+        self.pbar.setValue(50)
+        self.pbar.setTextVisible(False) # 隐藏进度文字
+        self.textbro_out = QTextBrowser()
+        self.textbro_out.setObjectName("textbro_out")
+        self.w4_bottom_vlay.addWidget(self.pbar)
+        self.w4_bottom_vlay.addWidget(self.textbro_out)
 
     # 切换进度展示
     def changeBarShow(self,index=0):
@@ -979,6 +1067,17 @@ background-image:url(../image/appimage/python-local-55.png);
                     return
             # 成功
             print(self.tree.getStateFiles())
+
+        if self.PageInfo == 3:
+            if direction == "top":
+                yes = QMessageBox.question(None,"确定?","返回是否清除已选项",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+                if yes == QMessageBox.Yes:
+                    self.tree.clear()
+                    # 由于返回会清除,所以需要再次创建
+                    self.tree.openTree(self.pro_line.text())
+
+            if direction == "next":
+                pass
 
         if Flag and direction == "top":
             self.PageInfo -= 1
@@ -1121,6 +1220,30 @@ background-image:url(../image/appimage/python-local-55.png);
             self.btn_detection.setText("检测失败")
             self.btn_detection.setStyleSheet("background-color: red;")
 
+    # 打包
+    def page_event(self):
+        r_path = os.path.dirname(self.pro_line.text())
+        print(r_path)
+        py_file = self.tree.getStateFiles()
+
+        for i in range(len(py_file)):
+            py_file[i]=path_to_unified(os.path.join(r_path,py_file[i]))
+
+        self.pbar.setValue(0) # 重置进度条
+
+        # 寻找入口程序并调整顺序
+        entrance_app_path = self.show_op_path.toPlainText()
+
+        if entrance_app_path not in py_file:
+            QMessageBox.critical(None,"错误","没有找到入口程序")
+            return
+        else:
+            # 判断位置是否在 0
+            index = py_file.index(entrance_app_path)
+            if index != 0:
+                temp_path = py_file.pop(index)
+                py_file.insert(0, temp_path)
+        print(py_file)
 
     def myEvent(self):
         # 项目路径事件
@@ -1143,6 +1266,9 @@ background-image:url(../image/appimage/python-local-55.png);
         # 配置检测事件
         self.btn_detection.clicked.connect(self.detection_event)
 
+        # 打包事件
+        self.page_btn.clicked.connect(self.page_event)
+
         # win1 下一步事件 -0
         self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))
         # win2 返回事件 -1
@@ -1151,6 +1277,9 @@ background-image:url(../image/appimage/python-local-55.png);
         # win3 事件 -2
         self.af_btn_2.clicked.connect(lambda :self.turn_page_event(direction="top"))
         self.be_btn_2.clicked.connect(lambda :self.turn_page_event(direction="next"))
+        # win4 事件 -3
+        self.af_btn_3.clicked.connect(lambda :self.turn_page_event(direction="top"))
+        self.be_btn_3.clicked.connect(lambda :self.turn_page_event(direction="next"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
