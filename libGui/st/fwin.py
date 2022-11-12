@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import (
 )
 from libGui.tree import Tree
 from core.utility import is_system_win,is_system_mac,correctionPath,path_to_unified
+from core.pageThread import PageThread
 
 
 # 首页(1)
@@ -459,6 +460,9 @@ class PyPyinstaller(QWidget):
 
         # 配置檢測
         self.detection_res = None
+
+        # 打包过程线程
+        self.page_th = PageThread()
 
         self.setObjectName("PyPyinstaller")
         self.setStyleSheet('''
@@ -937,6 +941,7 @@ background-color:#2c5f86;
         self.pbar.setValue(50)
         self.pbar.setTextVisible(False) # 隐藏进度文字
         self.textbro_out = QTextBrowser()
+        self.textbro_out.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # 隐藏垂直进度条
         self.textbro_out.setObjectName("textbro_out")
         self.w4_bottom_vlay.addWidget(self.pbar)
         self.w4_bottom_vlay.addWidget(self.textbro_out)
@@ -1062,6 +1067,10 @@ background-image:url(../image/appimage/python-local-55.png);
                     self.tree.clear()
 
             if direction == "next":
+                # 重置打包按钮
+                self.page_btn.setText("打包")
+                self.textbro_out.clear()
+
                 if not self.tree.getStateFiles():
                     QMessageBox.critical(None, "错误", "没有选择任何打包项")
                     return
@@ -1223,7 +1232,6 @@ background-image:url(../image/appimage/python-local-55.png);
     # 打包
     def page_event(self):
         r_path = os.path.dirname(self.pro_line.text())
-        print(r_path)
         py_file = self.tree.getStateFiles()
 
         for i in range(len(py_file)):
@@ -1243,7 +1251,54 @@ background-image:url(../image/appimage/python-local-55.png);
             if index != 0:
                 temp_path = py_file.pop(index)
                 py_file.insert(0, temp_path)
-        print(py_file)
+
+            # venv_path =
+            # 生成命令
+            if is_system_win:
+                cmd = "{} -m PyInstaller ".format(self.venv_path.text())
+
+            if is_system_mac:
+                cmd = "'{}' -m PyInstaller ".format(self.venv_path.text())
+
+            if self.terminal_comboBox.currentIndex() == 0: # 带终端窗口
+                cmd+="-D "
+            if self.app_comboBox.currentIndex() ==0: # 打包成单一程序
+                cmd+="-F "
+
+            # 程序名称
+            cmd += "-n {} ".format(self.app_line.text())
+
+            # 程序文件
+            head_file = py_file.pop(0)
+            if head_file:
+                if is_system_win:
+                    cmd += "{} -p ".format(head_file)
+                if is_system_mac:
+                    cmd += "'{}' -p ".format(head_file)
+            else:
+                if is_system_win:
+                    cmd += "{}".format(head_file)
+                if is_system_mac:
+                    cmd += "'{}'".format(head_file)
+
+            for path in py_file:
+                if is_system_win:
+                    cmd+="{};".format(path)
+                if is_system_mac:
+                    cmd += "'{}';".format(path)
+            # print(cmd)
+
+            # 管道执行
+            sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            self.page_th.setArgs(sub,self.pbar,self.page_btn)
+            self.page_th.start()
+
+    def page_info_event(self,info:dict):
+        line = info["line"]
+        bar = info["bar"]
+        # 输出
+        self.textbro_out.append(line)
+        self.pbar.setValue(bar)
 
     def myEvent(self):
         # 项目路径事件
@@ -1268,6 +1323,9 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # 打包事件
         self.page_btn.clicked.connect(self.page_event)
+
+        # 打包过程线程事件
+        self.page_th.sendPageInfo.connect(self.page_info_event)
 
         # win1 下一步事件 -0
         self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))
