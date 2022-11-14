@@ -1198,21 +1198,29 @@ background-image:url(image/appimage/python-local-55.png);
 
         # 检测gcc(这个仅对Nuitka有效)
         if pageWay == "Nuitka":
+            cmd = "gcc --version"
             try:
-                cmd = "gcc -v"
-                gcc_v = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
-                # print(gcc_v.communicate())
-                gcc_info = gcc_v.communicate()[0].decode("utf-8")
-                if not gcc_info:
+                gcc_v = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
+                version = gcc_v.stdout.read().decode("utf8")
+            except Exception as e:
+                version = ""
+                self.outDetection("GCC是否安装:{}".format("没有安装gcc"))
+                self.detection_res = False
+
+            if is_system_mac:
+                if "version" in version:
+                    self.outDetection("GCC是否安装:{}".format("已安装"))
+                else:
+                    self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc"))
+                    self.detection_res = False
+
+            if is_system_win:
+                if "COLLECT_GCC" in version:
+                    self.outDetection("GCC是否安装:{}".format("已安装"))
+                else:
                     self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc,请先下载MinGW64"))
                     self.detection_res = False
-                else:
-                    self.outDetection("GCC是否安装:{}".format("已安装"))
-            except Exception as e:
-                print(e)
-                self.outDetection("GCC是否安装:{}".format("没有安装gcc,请先下载MinGW64"))
-                self.detection_res = False
-                pass
+
 
         # 终端窗口
         terminal_i = self.terminal_comboBox.currentIndex()
@@ -1342,10 +1350,10 @@ background-image:url(image/appimage/python-local-55.png);
             end_name = os.path.basename(old_path)
             new_path = path_to_unified(os.path.join(save_path, end_name))
             if "." not in old_path:
-                if os.path.isdir(old_path):
+                if not os.path.isdir(old_path):
                     shutil.copytree(old_path,new_path)
             else:
-                if os.path.isfile(old_path):
+                if not os.path.isfile(old_path):
                     shutil.copyfile(old_path,new_path)
 
         print("资源拷贝完成")
