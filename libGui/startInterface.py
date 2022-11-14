@@ -71,12 +71,3 @@ background-color: rgb(5, 32, 56);
 
         # 返回
         self.pypyinstaller.afed.connect(lambda :self.setCurrentIndex(1))
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
-    win = StartInterface()
-    win.show()
-
-    sys.exit(app.exec_())

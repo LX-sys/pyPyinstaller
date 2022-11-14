@@ -18,6 +18,7 @@ class PageThread(QThread):
         这个错误原因是在程序在线程中 QTextBrowser 对这个控件使用append()
     '''
     sendPageInfo = pyqtSignal(dict)
+    finished = pyqtSignal()  # 打包完成的信号
 
     def __init__(self,*args,**kwargs):
         super(PageThread, self).__init__(*args,**kwargs)
@@ -43,3 +44,6 @@ class PageThread(QThread):
         self.sendPageInfo.emit({"line": "打包完成", "bar": self.pbar.maximum()})
         self.page_btn.setText("完成")
         self.page_btn.setEnabled(True)
+
+        #
+        self.finished.emit()

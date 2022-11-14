@@ -11,6 +11,8 @@
 
 import os
 import sys
+import copy
+import shutil
 import subprocess
 from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt
 from PyQt5.QtWidgets import (
@@ -188,14 +190,11 @@ border:1px solid #357dbd;
 color:#fff;
 background: transparent;
 }
-/*#win_label,#mac_label{
-border:1px solid yellow;
-}*/
 #win_label{
-background-image:url(../image/appimage/windows-96-gray.png);
+background-image:url(image/appimage/windows-96-gray.png);
 }
 #mac_label{
-background-image:url(../image/appimage/mac-96-gray.png);
+background-image:url(image/appimage/mac-96-gray.png);
 }
 #win_radio,#mac_radio{
 font: 10pt "等线";
@@ -344,6 +343,7 @@ font: 12pt "等线";
         self.page_way.setFixedHeight(40)
         self.placeholder_win = QWidget()  # 占位,目前还不知道
         self.placeholder_win.setObjectName("placeholder_win")
+
         self.p_box_vlay.addWidget(self.page_way)
         self.p_box_vlay.addWidget(self.placeholder_win)
 
@@ -394,13 +394,13 @@ font: 12pt "等线";
             self.win_radio.setChecked(True)
             self.win_label.setStyleSheet('''
             #win_label{
-            background-image: url(../image/appimage/windows-96-color.png);
+            background-image: url(image/appimage/windows-96-color.png);
             }''')
         if is_system_mac:
             self.mac_radio.setChecked(True)
             self.mac_label.setStyleSheet('''
 #mac_label{
-background-image:url(../image/appimage/mac-96-color.png);
+background-image:url(image/appimage/mac-96-color.png);
 }
             ''')
 
@@ -410,23 +410,23 @@ background-image:url(../image/appimage/mac-96-color.png);
         win_logo = {
             "gray": '''
 #win_label{
-background-image: url(../image/appimage/windows-96-gray.png);
+background-image: url(image/appimage/windows-96-gray.png);
 }
 ''',
             "color": '''
             #win_label{
-            background-image: url(../image/appimage/windows-96-color.png);
+            background-image: url(image/appimage/windows-96-color.png);
             }'''
         }
         mac_logo = {
             "gray": '''
             #mac_label{
-background-image:url(../image/appimage/mac-96-gray.png);
+background-image:url(image/appimage/mac-96-gray.png);
 }
             ''',
             "color": '''
 #mac_label{
-background-image:url(../image/appimage/mac-96-color.png);
+background-image:url(image/appimage/mac-96-color.png);
 }
 '''
         }
@@ -455,6 +455,7 @@ background-image:url(../image/appimage/mac-96-color.png);
 # 打包程序配置页
 class PyPyinstaller(QWidget):
     afed=pyqtSignal()  # 返回事件
+
     def __init__(self,*args,**kwargs):
         super(PyPyinstaller, self).__init__(*args,**kwargs)
 
@@ -470,7 +471,6 @@ class PyPyinstaller(QWidget):
 color:#fff;
 background-color: rgb(5, 32, 56);
 }
-
 #st_win{
 background-color: rgb(17, 61, 98);
 }
@@ -481,9 +481,7 @@ font: italic 20pt "Zapfino";
 background-color: rgb(17, 64, 104);
 border-radius:20px;
 }
-/*#label_1{
-background-color: rgb(30, 189, 98);*/
-}
+
         ''')
         # 上部分布局
         self.py_vlay = QVBoxLayout(self)
@@ -586,11 +584,11 @@ color:rgb(255, 62, 23);
 border:1px solid rgb(85, 170, 255);
 border-radius:2px;
 }
-#op_path_btn{
+#op_path_btn,#save_app_dir{
 background-color: rgb(51, 109, 158);
-border-radius:2px;
+border-radius:4px;
 }
-#op_path_btn:hover{
+#op_path_btn:hover,#save_app_dir:hover{
 background-color: #28567c;
 }
 #af_btn,#be_btn{
@@ -704,6 +702,19 @@ background-color:#2c5f86;
         self.af_btn.move(10,280)
         self.be_btn.move(80,280)
 
+        # 项目打包位置
+        self.save_app_dir = QPushButton("打包位置",self.pro_show_w)
+        self.save_app_dir.setObjectName("save_app_dir")
+        self.save_app_dir.setFixedSize(130,40)
+        self.save_app_dir.move(20,25)
+
+        self.save_app_dir_show = QTextBrowser(self.pro_show_w)
+        self.save_app_dir_show.setObjectName("save_app_dir_show")
+        self.save_app_dir_show.setFixedSize(400,100)
+        self.save_app_dir_show.move(20,80)
+
+        self.save_app_dir.clicked.connect(lambda :self.page_app_dir_event())
+
         self.af_btn.clicked.connect(lambda :self.afed.emit())
 
         # --
@@ -789,16 +800,15 @@ color:#11a611;
         self.st_win.addWidget(self.win3)
         self.win3.setStyleSheet('''
 #tree{
-/*border:2px solid rgb(66, 129, 178);*/
 border:none;
 color:rgb(255, 213, 79);
 font: 13pt "等线";
 }
 #tree::branch:closed:has-children:has-siblings,#tree::branch:open:has-children:!has-siblings {
-image:url(../image/appimage/tree-chevron-right-16.png);
+image:url(image/appimage/tree-chevron-right-16.png);
 }
 #tree::branch:closed:has-children:!has-siblings,#tree::branch:open:has-children:!has-siblings{
-image:url(../image/appimage/tree-chevron-down-16.png);
+image:url(image/appimage/tree-chevron-down-16.png);
 }
 #trw_top,#trw_bottom{
 border-left:1px solid rgb(66, 129, 178);
@@ -983,7 +993,7 @@ background-color:#2c5f86;
                 self.venv_path.setText(interpreter_path)
                 self.v_image.setStyleSheet('''
                 #v_image{
-background-image:url(../image/appimage/python-venv-55.png);
+background-image:url(image/appimage/python-venv-55.png);
 }
                 ''')
             else:
@@ -992,7 +1002,7 @@ background-image:url(../image/appimage/python-venv-55.png);
                 self.venv_path.setPlaceholderText("没有找到虚拟环境")
                 self.v_image.setStyleSheet('''
                 #v_image{
-background-image:url(../image/appimage/python-local-55.png);
+background-image:url(image/appimage/python-local-55.png);
 }
                 ''')
 
@@ -1021,9 +1031,9 @@ background-image:url(../image/appimage/python-local-55.png);
     def vl_radio_change_event(self,obj:QRadioButton):
         text = obj.text()
         if text == "虚拟环境":
-            self.v_image.setStyleSheet("background-image:url(../image/appimage/python-venv-55.png);")
+            self.v_image.setStyleSheet("background-image:url(image/appimage/python-venv-55.png);")
         if text == "本地环境":
-            self.v_image.setStyleSheet("background-image:url(../image/appimage/python-local-55.png);")
+            self.v_image.setStyleSheet("background-image:url(image/appimage/python-local-55.png);")
 
     # 选择程序入口文件
     def choose_entrance_file_event(self):
@@ -1039,7 +1049,8 @@ background-image:url(../image/appimage/python-local-55.png);
         if self.PageInfo == 0 and direction == "next":
             if not self.venv_path.text() or \
                     not self.pro_line.text() or \
-                    not self.show_op_path.toPlainText():
+                    not self.show_op_path.toPlainText() or \
+                    not self.save_app_dir_show.toPlainText():
                 QMessageBox.critical(None, "错误", "信息不完整")
                 return
 
@@ -1241,7 +1252,6 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # 寻找入口程序并调整顺序
         entrance_app_path = self.show_op_path.toPlainText()
-
         if entrance_app_path not in py_file:
             QMessageBox.critical(None,"错误","没有找到入口程序")
             return
@@ -1288,17 +1298,57 @@ background-image:url(../image/appimage/python-local-55.png);
                     cmd += "'{}';".format(path)
             # print(cmd)
 
+            # 指定输出目录
+            save_out_dir = self.save_app_dir_show.toPlainText()
+            if save_out_dir:
+                cmd +=" --distpath {0} --specpath {0} --workpath {0}".format(save_out_dir)
+
             # 管道执行
             sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             self.page_th.setArgs(sub,self.pbar,self.page_btn)
             self.page_th.start()
 
+    # 打包位置
+    def page_app_dir_event(self):
+        dir_path = QFileDialog.getExistingDirectory(self, caption="保存目录")
+        if dir_path:
+            dir_path = correctionPath(dir_path)  # 修正路径
+            self.save_app_dir_show.setText(dir_path)
+
+    # 打包过程中的输出信息事件
     def page_info_event(self,info:dict):
         line = info["line"]
         bar = info["bar"]
         # 输出
         self.textbro_out.append(line)
         self.pbar.setValue(bar)
+
+    # 打包完成后的事件
+    def page_finish_event(self):
+        save_path = self.save_app_dir_show.toPlainText()
+        if not save_path:
+            return
+
+        print("打包完成后触发")
+        r_path = os.path.dirname(self.pro_line.text())
+
+        # 1. 获取资源列表
+        resourcefiles = self.tree.getImgResourceFiles()
+
+        for i in range(len(resourcefiles)):
+            resourcefiles[i]=path_to_unified(os.path.join(r_path,resourcefiles[i]))
+
+        for old_path in resourcefiles:
+            end_name = os.path.basename(old_path)
+            new_path = path_to_unified(os.path.join(save_path, end_name))
+            if "." not in old_path:
+                if os.path.isdir(old_path):
+                    shutil.copytree(old_path,new_path)
+            else:
+                if os.path.isfile(old_path):
+                    shutil.copyfile(old_path,new_path)
+
+        print("资源拷贝完成")
 
     def myEvent(self):
         # 项目路径事件
@@ -1326,6 +1376,7 @@ background-image:url(../image/appimage/python-local-55.png);
 
         # 打包过程线程事件
         self.page_th.sendPageInfo.connect(self.page_info_event)
+        self.page_th.finished.connect(self.page_finish_event)
 
         # win1 下一步事件 -0
         self.be_btn.clicked.connect(lambda :self.turn_page_event(direction="next"))

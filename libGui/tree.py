@@ -1,11 +1,13 @@
 
 import sys
 import copy
-from PyQt5.QtCore import Qt,pyqtSignal
+from PyQt5.QtCore import Qt,pyqtSignal,QPoint
+from PyQt5.QtGui import QCursor,QColor
 from PyQt5.QtWidgets import (
     QApplication,
     QTreeWidget,
     QTreeWidgetItem,
+    QMenu
 )
 from core.utility import is_system_win,is_system_mac
 from core.projectAnalysis.projectPath import ProjectPath
@@ -26,11 +28,18 @@ class Tree(QTreeWidget):
         if is_system_win:
             self.separator = "\\"
 
+        # 选中的路径
         self.checkState_paths = []
+        # 标记的资源路径
+        self.imgFlag_paths = []
 
         self.setObjectName("tree")
         self.pro = ProjectPath()
-        # self.openTree(r"D:\code\wpTranscribe")
+        # self.openTree(r"D:\code\excelGenerate")
+
+        # 注册右键菜单
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.menu_Event)
 
         self.myEvent()
 
@@ -108,10 +117,15 @@ class Tree(QTreeWidget):
             else:
                 if cur_item_xpath in self.checkState_paths:
                     self.checkState_paths.remove(cur_item_xpath)
+        print(self.checkState_paths)
 
     # 返回所有选择的文件
     def getStateFiles(self)->list:
         return self.checkState_paths
+
+    # 返回所有资源文件
+    def getImgResourceFiles(self)->list:
+        return self.imgFlag_paths
 
     # 返回当前对象下面的项
     def getItem(self,item):
@@ -135,6 +149,19 @@ class Tree(QTreeWidget):
             if "." not in i.text(0):
                 self.allState(self.getItem(i), checkState)
 
+    # 标记父目录时,同时标记所有/取消子目录
+    def allFlag(self,item:QTreeWidgetItem=None,color=QColor(0,255,0)):
+        if item is None:
+            root = self.getItem(self)
+        else:
+            root = item
+        for i in root:
+            i.setForeground(0,color)
+            if "." not in i.text(0):
+                self.allFlag(self.getItem(i), color)
+            # else:
+            #     self.imgFlag_paths.append(self.xpathItem(i))
+
     # 获取所有勾选的文件
     def getStateFile(self,item:QTreeWidgetItem=None,path=""):
         if item is None:
@@ -153,6 +180,37 @@ class Tree(QTreeWidget):
                 else:
                     self.getStateFile(self.getItem(i),part_path)
         return copy.copy(self.checkState_paths)  # 这里必须返回copy,不能直接返回
+
+    # 右键事件
+    def menu_Event(self, pos: QPoint):
+        # 当前右键选中的节点
+        currentItem = self.itemAt(pos)
+        # 创建菜单
+        menu = QMenu()
+        #
+        image_name = menu.addAction("标记为资源文件")
+        if currentItem:
+            image_name.triggered.connect(lambda :self.img_flag_event(currentItem))
+
+        # 显示菜单
+        menu.exec_(QCursor.pos())
+
+    # 标记事件
+    def img_flag_event(self,item:QTreeWidgetItem):
+        color_v = item.foreground(0).color().name()
+        if color_v == "#00ff00":
+            item.setForeground(0,QColor(255, 213, 79))
+            color = QColor(255, 213, 79)
+        elif color_v == "#ffd54f" or color_v == "#000000":
+            item.setForeground(0,QColor(0,255,0))
+            color = QColor(0,255,0)
+            self.imgFlag_paths.append(self.xpathItem(item))
+
+        items = self.getItem(item)
+        self.allFlag(items,color)
+        if color_v == "#00ff00":
+            self.imgFlag_paths.clear()
+        print(self.getImgResourceFiles())
 
 
     def myEvent(self):
