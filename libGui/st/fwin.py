@@ -1136,7 +1136,7 @@ background-image:url(image/appimage/python-local-55.png);
 
         # 检测虚拟环境
         venv_path = self.venv_path.text() # 虚拟环境路径
-        ra_text ="虚拟环境" if self.venv_radio.isChecked() else "本地环境"
+        ra_text = "虚拟环境" if self.venv_radio.isChecked() else "本地环境"
         if os.path.isfile(venv_path):
             self.outDetection("{}: {}".format(ra_text,venv_path))
         else:
