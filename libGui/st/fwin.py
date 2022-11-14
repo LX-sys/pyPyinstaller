@@ -948,7 +948,7 @@ background-color:#2c5f86;
         self.pbar.setObjectName("pbar")
         self.pbar.setFixedHeight(12)
         self.pbar.setMaximum(100)
-        self.pbar.setValue(50)
+        self.pbar.setValue(0)
         self.pbar.setTextVisible(False) # 隐藏进度文字
         self.textbro_out = QTextBrowser()
         self.textbro_out.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff) # 隐藏垂直进度条
@@ -1308,9 +1308,13 @@ background-image:url(image/appimage/python-local-55.png);
 
             # 指定输出目录
             save_out_dir = self.save_app_dir_show.toPlainText()
+            print(save_out_dir)
             if save_out_dir:
-                cmd +=" --distpath {0} --specpath {0} --workpath {0}".format(save_out_dir)
-
+                if is_system_win:
+                    cmd += " --distpath {0} --specpath {0} --workpath {0}".format(save_out_dir)
+                # if is_system_mac:
+                #     cmd += " --distpath \'{0}\' --specpath \'{0}\' --workpath \'{0}\'".format(save_out_dir)
+            # print(cmd)
             # 管道执行
             sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             self.page_th.setArgs(sub,self.pbar,self.page_btn)
@@ -1349,13 +1353,15 @@ background-image:url(image/appimage/python-local-55.png);
         for old_path in resourcefiles:
             end_name = os.path.basename(old_path)
             new_path = path_to_unified(os.path.join(save_path, end_name))
-            if "." not in old_path:
-                if not os.path.isdir(old_path):
-                    shutil.copytree(old_path,new_path)
+            if os.path.isdir(old_path) and not os.path.isdir(new_path):
+                shutil.copytree(old_path,new_path)
             else:
-                if not os.path.isfile(old_path):
-                    shutil.copyfile(old_path,new_path)
+                shutil.copyfile(old_path,new_path)
 
+        if is_system_mac:
+            new_path = self.save_app_dir_show.toPlainText()
+            shutil.move("dist",new_path)
+            shutil.move("build",new_path)
         print("资源拷贝完成")
 
     def myEvent(self):

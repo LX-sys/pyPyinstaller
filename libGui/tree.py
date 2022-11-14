@@ -117,7 +117,7 @@ class Tree(QTreeWidget):
             else:
                 if cur_item_xpath in self.checkState_paths:
                     self.checkState_paths.remove(cur_item_xpath)
-        print(self.checkState_paths)
+        # print(self.checkState_paths)
 
     # 返回所有选择的文件
     def getStateFiles(self)->list:
