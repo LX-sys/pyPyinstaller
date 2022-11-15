@@ -1204,7 +1204,6 @@ background-image:url(image/appimage/python-local-55.png);
                 version = gcc_v.stdout.read().decode("utf8")
             except Exception as e:
                 version = ""
-                self.outDetection("GCC是否安装:{}".format("没有安装gcc"))
                 self.detection_res = False
 
             if is_system_mac:
@@ -1220,7 +1219,6 @@ background-image:url(image/appimage/python-local-55.png);
                 else:
                     self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc,请先下载MinGW64"))
                     self.detection_res = False
-
 
         # 终端窗口
         terminal_i = self.terminal_comboBox.currentIndex()
