@@ -52,7 +52,6 @@ background-color: rgb(5, 32, 56);
         index = info["op"]
         if index == 0:
             print("进入配置页面")
-            print("test")
             self.setCurrentIndex(1)
 
     #
