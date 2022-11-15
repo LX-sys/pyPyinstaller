@@ -1306,13 +1306,22 @@ background-image:url(image/appimage/python-local-55.png);
 
             # 指定输出目录
             save_out_dir = self.save_app_dir_show.toPlainText()
-            print(save_out_dir)
+
+            # 项目名称
+            project_name = os.path.basename(self.pro_line.text())
+            prodir = path_to_unified(os.path.join(save_out_dir, project_name))
+            if not os.path.isdir(prodir):
+                os.mkdir(prodir)
+                self.save_app_dir_show.setText(prodir)
+            save_out_dir = prodir
+            print("创建目录:", save_out_dir)
+
             if save_out_dir:
                 if is_system_win:
                     cmd += " --distpath {0} --specpath {0} --workpath {0}".format(save_out_dir)
                 # if is_system_mac:
                 #     cmd += " --distpath \'{0}\' --specpath \'{0}\' --workpath \'{0}\'".format(save_out_dir)
-            # print(cmd)
+            print(cmd)
             # 管道执行
             sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             self.page_th.setArgs(sub,self.pbar,self.page_btn)
@@ -1357,10 +1366,20 @@ background-image:url(image/appimage/python-local-55.png);
                 shutil.copyfile(old_path,new_path)
 
         if is_system_mac:
-            new_path = self.save_app_dir_show.toPlainText()
-            shutil.move("dist",new_path)
-            shutil.move("build",new_path)
+            shutil.move("dist",save_path)
+            shutil.move("build",save_path)
+
+
         print("资源拷贝完成")
+
+        # 保存的最近项目
+        '''
+            项目类型
+            编辑器
+            打包方式
+        '''
+        # edit_name = self.editor_box
+
 
     def myEvent(self):
         # 项目路径事件
