@@ -4,6 +4,7 @@
 # @file:pageThread.py
 # @software:PyCharm
 
+import time
 from PyQt5.QtCore import QThread,pyqtSignal
 from PyQt5.QtWidgets import QPushButton,QProgressBar
 
@@ -18,7 +19,7 @@ class PageThread(QThread):
         这个错误原因是在程序在线程中 QTextBrowser 对这个控件使用append()
     '''
     sendPageInfo = pyqtSignal(dict)
-    finished = pyqtSignal()  # 打包完成的信号
+    finished = pyqtSignal(str)  # 打包完成的信号
 
     def __init__(self,*args,**kwargs):
         super(PageThread, self).__init__(*args,**kwargs)
@@ -35,6 +36,7 @@ class PageThread(QThread):
         self.page_btn.setText("打包中")
         self.page_btn.setEnabled(False)
 
+        start_time = time.time()
         while self.sub.poll() is None:
             line = self.sub.stdout.readline()
             line = line.strip().decode("utf-8")
@@ -46,4 +48,4 @@ class PageThread(QThread):
         self.page_btn.setEnabled(True)
 
         #
-        self.finished.emit()
+        self.finished.emit(str(round(time.time()-start_time,2)))

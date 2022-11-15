@@ -33,7 +33,8 @@ from PyQt5.QtWidgets import (
     QTextBrowser,
     QFileDialog,
     QMessageBox,
-    QProgressBar
+    QProgressBar,
+    QFormLayout
 )
 from libGui.tree import Tree
 from core.utility import is_system_win,is_system_mac,correctionPath,path_to_unified
@@ -521,11 +522,8 @@ border-radius:20px;
             l.setAlignment(Qt.AlignCenter)
             self.progress_win_hlay.addWidget(l)
         # ===
-        self.win1()
-        self.win2()
-        self.win3()
-        self.win4()
 
+        self.in_init()
         #===
         self.myEvent()
         # 全局页面索引
@@ -533,6 +531,14 @@ border-radius:20px;
 
         self.st_win.setCurrentIndex(0)
         self.exter_info = dict()
+
+    # 初始化
+    def in_init(self):
+        self.win1()
+        self.win2()
+        self.win3()
+        self.win4()
+        self.win5()
 
     # 接收来自 初始配置页信息
     def setExternalInfo(self,info):
@@ -612,110 +618,110 @@ background-color:#2c5f86;
         self.changeBarShow(0)
 
         self.win_glay = QGridLayout(self.win1)
-        self.win_glay.setContentsMargins(3,3,3,3)
+        self.win_glay.setContentsMargins(3, 3, 3, 3)
         self.win_glay.setSpacing(7)
         self.pro_entrance_gbox = QGroupBox()
         self.pro_entrance_gbox.setObjectName("pro_entrance_gbox")
         self.pro_entrance_gbox.setTitle("项目路径设置")
-        self.pro_entrance_gbox.setFixedSize(950,240)
+        self.pro_entrance_gbox.setFixedSize(950, 240)
 
         self.pro_info_gbox = QGroupBox()
         self.pro_info_gbox.setObjectName("pro_info_gbox")
         self.pro_info_gbox.setTitle("项目信息")
-        self.pro_info_gbox.setFixedSize(500,340)
+        self.pro_info_gbox.setFixedSize(500, 340)
 
         self.pro_show_w = QWidget()
         self.pro_show_w.setObjectName("pro_show_w")
-        self.pro_show_w.setFixedSize(440,340)
-        self.win_glay.addWidget(self.pro_entrance_gbox,0,0,1,2)
-        self.win_glay.addWidget(self.pro_info_gbox,1,0,1,1)
-        self.win_glay.addWidget(self.pro_show_w,1,1,1,1)
+        self.pro_show_w.setFixedSize(440, 340)
+        self.win_glay.addWidget(self.pro_entrance_gbox, 0, 0, 1, 2)
+        self.win_glay.addWidget(self.pro_info_gbox, 1, 0, 1, 1)
+        self.win_glay.addWidget(self.pro_show_w, 1, 1, 1, 1)
 
         # 项目路径内部布局
         self.pro_line = QLineEdit(self.pro_entrance_gbox)
         self.pro_line.setObjectName("pro_line")
-        self.pro_line.setFixedSize(660,30)
-        self.pro_open_btn = QPushButton("...",self.pro_entrance_gbox)
+        self.pro_line.setFixedSize(660, 30)
+        self.pro_open_btn = QPushButton("...", self.pro_entrance_gbox)
         self.pro_open_btn.setObjectName("pro_open_btn")
-        self.pro_open_btn.setFixedSize(75,30)
-        self.pro_line.move(90,30)
-        self.pro_open_btn.move(750,30)
+        self.pro_open_btn.setFixedSize(75, 30)
+        self.pro_line.move(90, 30)
+        self.pro_open_btn.move(750, 30)
 
-        V_Radio = (90,25)
-        self.venv_radio = QRadioButton("虚拟环境",self.pro_entrance_gbox)
+        V_Radio = (90, 25)
+        self.venv_radio = QRadioButton("虚拟环境", self.pro_entrance_gbox)
         self.venv_radio.setObjectName("venv_radio")
         self.venv_radio.setFixedSize(*V_Radio)
         self.v_image = QLabel(self.pro_entrance_gbox)
         self.v_image.setObjectName("v_image")
-        self.v_image.setFixedSize(55,55)
-        self.local_radio = QRadioButton("本地环境",self.pro_entrance_gbox)
+        self.v_image.setFixedSize(55, 55)
+        self.local_radio = QRadioButton("本地环境", self.pro_entrance_gbox)
         self.local_radio.setObjectName("local_radio")
         self.local_radio.setFixedSize(*V_Radio)
         self.venv_path = QLineEdit(self.pro_entrance_gbox)
         self.venv_path.setObjectName("venv_path")
-        self.venv_path.setFixedSize(730,30)
-        self.venv_radio.move(90,100)
-        self.v_image.move(420,80)
-        self.local_radio.move(730,100)
-        self.venv_path.move(90,170)
+        self.venv_path.setFixedSize(730, 30)
+        self.venv_radio.move(90, 100)
+        self.v_image.move(420, 80)
+        self.local_radio.move(730, 100)
+        self.venv_path.move(90, 170)
 
         # 项目信息部分
-        self.app_name = QLabel("可执行程序名称",self.pro_info_gbox)
+        self.app_name = QLabel("可执行程序名称", self.pro_info_gbox)
         self.app_name.setObjectName("app_name")
-        self.app_name.setFixedSize(120,30)
+        self.app_name.setFixedSize(120, 30)
         self.app_line = QLineEdit(self.pro_info_gbox)
         self.app_line.setText("main")  # 默认main
         self.app_line.setObjectName("app_line")
-        self.app_line.setFixedSize(220,30)
-        self.app_name.move(20,40)
-        self.app_line.move(150,40)
+        self.app_line.setFixedSize(220, 30)
+        self.app_name.move(20, 40)
+        self.app_line.move(150, 40)
         self.terminal_comboBox = QComboBox(self.pro_info_gbox)
         self.terminal_comboBox.setObjectName("terminal_comboBox")
-        self.terminal_comboBox.addItems(["带终端窗口","不带终端窗口"])
-        self.terminal_comboBox.setFixedSize(130,30)
+        self.terminal_comboBox.addItems(["带终端窗口", "不带终端窗口"])
+        self.terminal_comboBox.setFixedSize(130, 30)
         self.app_comboBox = QComboBox(self.pro_info_gbox)
         self.app_comboBox.setObjectName("terminal_comboBox")
-        self.app_comboBox.addItems(["打包成单一程序","包含文件夹"])
-        self.app_comboBox.setFixedSize(140,30)
-        self.terminal_comboBox.move(20,95)
-        self.app_comboBox.move(240,95)
-        self.app_entrance_label = QLabel("程序入口文件路径(这个路径直接决定你的程序是否能正常运行)*",self.pro_info_gbox)
+        self.app_comboBox.addItems(["打包成单一程序", "包含文件夹"])
+        self.app_comboBox.setFixedSize(140, 30)
+        self.terminal_comboBox.move(20, 95)
+        self.app_comboBox.move(240, 95)
+        self.app_entrance_label = QLabel("程序入口文件路径(这个路径直接决定你的程序是否能正常运行)*", self.pro_info_gbox)
         self.app_entrance_label.setObjectName("app_entrance_label")
-        self.app_entrance_label.setFixedSize(460,20)
-        self.app_entrance_label.move(20,150)
-        self.op_path_btn = QPushButton("选择路径",self.pro_info_gbox)
+        self.app_entrance_label.setFixedSize(460, 20)
+        self.app_entrance_label.move(20, 150)
+        self.op_path_btn = QPushButton("选择路径", self.pro_info_gbox)
         self.op_path_btn.setObjectName("op_path_btn")
-        self.op_path_btn.setFixedSize(80,40)
-        self.op_path_btn.move(20,180)
+        self.op_path_btn.setFixedSize(80, 40)
+        self.op_path_btn.move(20, 180)
         self.show_op_path = QTextBrowser(self.pro_info_gbox)
         self.show_op_path.setObjectName("show_op_path")
-        self.show_op_path.setFixedSize(460,90)
-        self.show_op_path.move(20,230)
+        self.show_op_path.setFixedSize(460, 90)
+        self.show_op_path.move(20, 230)
 
         # self.pro_show_w上面的布局
-        self.af_btn = QPushButton("返回",self.pro_show_w)
+        self.af_btn = QPushButton("返回", self.pro_show_w)
         self.af_btn.setObjectName("af_btn")
-        self.af_btn.setFixedSize(65,50)
-        self.be_btn = QPushButton("下一步",self.pro_show_w)
+        self.af_btn.setFixedSize(65, 50)
+        self.be_btn = QPushButton("下一步", self.pro_show_w)
         self.be_btn.setObjectName("be_btn")
-        self.be_btn.setFixedSize(350,50)
-        self.af_btn.move(10,280)
-        self.be_btn.move(80,280)
+        self.be_btn.setFixedSize(350, 50)
+        self.af_btn.move(10, 280)
+        self.be_btn.move(80, 280)
 
         # 项目打包位置
-        self.save_app_dir = QPushButton("打包位置",self.pro_show_w)
+        self.save_app_dir = QPushButton("打包位置", self.pro_show_w)
         self.save_app_dir.setObjectName("save_app_dir")
-        self.save_app_dir.setFixedSize(130,40)
-        self.save_app_dir.move(20,25)
+        self.save_app_dir.setFixedSize(130, 40)
+        self.save_app_dir.move(20, 25)
 
         self.save_app_dir_show = QTextBrowser(self.pro_show_w)
         self.save_app_dir_show.setObjectName("save_app_dir_show")
-        self.save_app_dir_show.setFixedSize(400,100)
-        self.save_app_dir_show.move(20,80)
+        self.save_app_dir_show.setFixedSize(400, 100)
+        self.save_app_dir_show.move(20, 80)
 
-        self.save_app_dir.clicked.connect(lambda :self.page_app_dir_event())
+        self.save_app_dir.clicked.connect(lambda: self.page_app_dir_event())
 
-        self.af_btn.clicked.connect(lambda :self.afed.emit())
+        self.af_btn.clicked.connect(lambda: self.afed.emit())
 
         # --
 
@@ -956,6 +962,75 @@ background-color:#2c5f86;
         self.w4_bottom_vlay.addWidget(self.pbar)
         self.w4_bottom_vlay.addWidget(self.textbro_out)
 
+    # 完成页面
+    def win5(self):
+        self.win5 = QWidget()
+        self.win5.setObjectName("win5")
+        self.st_win.addWidget(self.win5)
+        self.win5.setStyleSheet('''
+#w5_right_w{
+border:1px solid yellow;
+}
+QLabel{
+background-color:rgb(25, 183, 237);
+}
+#af_btn_4,#home_page{
+border-radius:4px;
+}
+#af_btn_4{
+background-color: gray;
+}
+#af_btn_4:hover{
+background-color:#555656;
+}
+#home_page{
+background-color: rgb(15, 118, 250);
+}
+#home_page:hover{
+background-color:rgb(9, 71, 245);
+}
+        ''')
+
+        self.win5_hlay = QHBoxLayout(self.win5)
+        self.w5_left_w = QWidget()
+        self.w5_right_w = QWidget()
+        self.w5_left_w.setObjectName("w5_left_w")
+        self.w5_right_w.setObjectName("w5_right_w")
+        self.w5_left_w.setMinimumWidth(400)
+        self.win5_hlay.addWidget(self.w5_left_w)
+        self.win5_hlay.addWidget(self.w5_right_w)
+
+        # 左侧内部
+        self.w5_left_vlay = QVBoxLayout(self.w5_left_w)
+        self.w5_left_vlay.setContentsMargins(0,0,0,0)
+        self.w5_left_vlay.setSpacing(0)
+        self.end_l_sys = QLabel("操作系统: Win")
+        self.end_l_pro_name = QLabel("项目名称: pyPyinstaller")
+        self.end_l_page_way = QLabel("打包方式: Pyinstaller")
+        self.end_l_time = QLabel("打包时长: 3243。8")
+        temp = [self.end_l_sys,self.end_l_pro_name,self.end_l_page_way,self.end_l_time]
+        for l in temp:
+            l.setAlignment(Qt.AlignCenter)
+            l.setFixedHeight(50)
+            self.w5_left_vlay.addWidget(l)
+
+        # 右边内容
+        self.home_page = QPushButton("首页",self.w5_right_w)
+        self.af_btn_4 = QPushButton("返回",self.w5_right_w)
+        self.home_page.setObjectName("home_page")
+        self.af_btn_4.setObjectName("af_btn_4")
+        self.home_page.setFixedSize(180,70)
+        self.af_btn_4.setFixedSize(180,70)
+        self.home_page.move(130,130)
+        self.af_btn_4.move(130,300)
+
+    # 设置打包完成后，最后页面的信息
+    def setEndInfo(self,sys_name,pro_name,page_way,page_time):
+        self.end_l_sys.setText("操作系统: {}".format(sys_name))
+        self.end_l_pro_name.setText("项目名称: {}".format(pro_name))
+        self.end_l_page_way.setText("打包方式: {}".format(page_way))
+        self.end_l_time.setText("打包时长: {}".format(page_time))
+
     # 切换进度展示
     def changeBarShow(self,index=0):
         lables = [self.label_1, self.label_2, self.label_3, self.label_4, self.label_5]
@@ -1098,6 +1173,17 @@ background-image:url(image/appimage/python-local-55.png);
 
             if direction == "next":
                 pass
+
+        if self.PageInfo == 4:
+            if direction == "home":
+                yes = QMessageBox.question(None,"确定?","返回首页?",QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+                if yes == QMessageBox.Yes:
+                    self.st_win.setCurrentIndex(0)
+                    self.PageInfo = 0
+                    self.changeBarShow(0)
+                    return
+                else:
+                    return
 
         if Flag and direction == "top":
             self.PageInfo -= 1
@@ -1343,7 +1429,7 @@ background-image:url(image/appimage/python-local-55.png);
         self.pbar.setValue(bar)
 
     # 打包完成后的事件
-    def page_finish_event(self):
+    def page_finish_event(self,str_time:str):
         save_path = self.save_app_dir_show.toPlainText()
         if not save_path:
             return
@@ -1369,8 +1455,13 @@ background-image:url(image/appimage/python-local-55.png);
             shutil.move("dist",save_path)
             shutil.move("build",save_path)
 
-
         print("资源拷贝完成")
+        # 最后显示信息
+        sys_name = "Win" if is_system_win else "Mac"
+        pro_name = os.path.basename(self.pro_line.text())
+        page_way = self.exter_info["pageWay"]
+        self.setEndInfo(sys_name,pro_name,page_way,str_time)
+
 
         # 保存的最近项目
         '''
@@ -1420,6 +1511,9 @@ background-image:url(image/appimage/python-local-55.png);
         # win4 事件 -3
         self.af_btn_3.clicked.connect(lambda :self.turn_page_event(direction="top"))
         self.be_btn_3.clicked.connect(lambda :self.turn_page_event(direction="next"))
+        # win5 事件 -4 返回首页
+        self.home_page.clicked.connect(lambda :self.turn_page_event(direction="home"))
+        self.af_btn_4.clicked.connect(lambda: self.turn_page_event(direction="top"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
