@@ -35,8 +35,8 @@ class Tree(QTreeWidget):
 
         self.setObjectName("tree")
         self.pro = ProjectPath()
-        # self.openTree(r"D:\code\excelGenerate")
-
+        self.openTree(r"D:\code\excelGenerate")
+        #
         # 注册右键菜单
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.menu_Event)
@@ -117,7 +117,7 @@ class Tree(QTreeWidget):
             else:
                 if cur_item_xpath in self.checkState_paths:
                     self.checkState_paths.remove(cur_item_xpath)
-        # print(self.checkState_paths)
+        print(self.checkState_paths)
 
     # 返回所有选择的文件
     def getStateFiles(self)->list:
@@ -210,7 +210,7 @@ class Tree(QTreeWidget):
         self.allFlag(items,color)
         if color_v == "#00ff00":
             self.imgFlag_paths.clear()
-        print(self.getImgResourceFiles())
+        # print(self.getImgResourceFiles())
 
 
     def myEvent(self):

@@ -4,9 +4,9 @@
 # @file:utility.py
 # @software:PyCharm
 
-
-import sys
 import os
+import sys
+import json
 import platform
 
 # 根路径
@@ -47,3 +47,14 @@ def correctionPath(path:str)->str:
 
 def Path(*args):
     return os.path.join(RootPath,*args)
+
+def save(path,data:dict)->None:
+    # 缓存到本地
+    with open(path, "w", encoding="utf8") as f:
+        json.dump(data, f)
+
+
+def load(path)->dict:
+    with open(path, "r", encoding="utf8") as f:
+        data = json.load(f)
+    return data

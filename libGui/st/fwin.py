@@ -14,7 +14,7 @@ import sys
 import copy
 import shutil
 import subprocess
-from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt
+from PyQt5.QtCore import QPropertyAnimation, QPoint,pyqtSignal,Qt,QModelIndex
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -34,7 +34,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QProgressBar,
-    QFormLayout
+    QFormLayout,
 )
 from libGui.tree import Tree
 from core.utility import is_system_win,is_system_mac,correctionPath,path_to_unified
@@ -44,6 +44,7 @@ from core.pageThread import PageThread
 # 首页(1)
 class FirstWin(QWidget):
     oked = pyqtSignal(dict)
+    sendTexted = pyqtSignal(str) # 发送点击文本
 
     def __init__(self,*args,**kwargs):
         super(FirstWin, self).__init__(*args,**kwargs)
@@ -128,7 +129,12 @@ color:rgb(230, 221, 197);
         self.listWidget_recently.setObjectName("listWidget_recently")
         self.listWidget_recently.move(370, 30)
         self.listWidget_recently.hide()  # 先隐藏
-        self.addRecentlyPro("das")
+
+        # 双击事件
+        self.listWidget_recently.doubleClicked.connect(self.item_event)
+
+    def item_event(self,item:QModelIndex):
+        self.sendTexted.emit(item.data(0))
 
     # 动画事件
     def ani_event(self, i):
@@ -456,6 +462,7 @@ background-image:url(image/appimage/mac-96-color.png);
 # 打包程序配置页
 class PyPyinstaller(QWidget):
     afed=pyqtSignal()  # 返回事件
+    pageEnded = pyqtSignal(dict) # 发送路径信息
 
     def __init__(self,*args,**kwargs):
         super(PyPyinstaller, self).__init__(*args,**kwargs)
@@ -1465,12 +1472,47 @@ background-image:url(image/appimage/python-local-55.png);
 
         # 保存的最近项目
         '''
-            项目类型
-            编辑器
-            打包方式
+            项目路径
+            虚拟环境
+            入口程序路径
+            打包位置路径
+            
         '''
-        # edit_name = self.editor_box
+        recently_info = {
+            "pro_name":pro_name,
+            "edit_name":self.pro_line.text(),
+            "app_name":self.app_line.text(),
+            "venv":1 if self.venv_radio.isChecked() else 0,
+            "venv_path":self.venv_path.text(),
+            "app_path":self.show_op_path.toPlainText(),
+            "page_way":os.path.dirname(self.save_app_dir_show.toPlainText())
 
+        }
+
+        self.pageEnded.emit(recently_info)
+
+    # 由双击最近打包名称触发,恢复之前的信息
+    def setRecentlyInfo(self,info:dict):
+        self.pro_line.setText(info["edit_name"])
+        self.app_line.setText(info["app_name"])
+        self.venv_path.setText(info["venv_path"])
+        self.show_op_path.setText(info["app_path"])
+        self.save_app_dir_show.setText(info["page_way"])
+
+        if info["venv"] == 1:
+            self.venv_radio.setChecked(True)
+            self.v_image.setStyleSheet('''
+                            #v_image{
+            background-image:url(image/appimage/python-venv-55.png);
+            }
+                            ''')
+        if info["venv"] == 0:
+            self.local_radio.setChecked(True)
+            self.v_image.setStyleSheet('''
+                            #v_image{
+            background-image:url(image/appimage/python-local-55.png);
+            }
+                            ''')
 
     def myEvent(self):
         # 项目路径事件
