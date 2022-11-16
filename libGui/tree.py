@@ -35,7 +35,7 @@ class Tree(QTreeWidget):
 
         self.setObjectName("tree")
         self.pro = ProjectPath()
-        self.openTree(r"D:\code\excelGenerate")
+        # self.openTree(r"D:\code\excelGenerate")
         #
         # 注册右键菜单
         self.setContextMenuPolicy(Qt.CustomContextMenu)
