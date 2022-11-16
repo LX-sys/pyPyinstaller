@@ -1119,9 +1119,9 @@ background-image:url(image/appimage/python-local-55.png);
 
     # 选择程序入口文件
     def choose_entrance_file_event(self):
-        path = QFileDialog.getOpenFileName(self, caption="选择程序入口文件")
+        path = QFileDialog.getOpenFileName(self, caption="选择程序入口文件")[0]
         if path:
-            path = correctionPath(path[0])  # 修正
+            path = correctionPath(path)  # 修正
             self.show_op_path.setText(path)
 
     # 翻页事件
