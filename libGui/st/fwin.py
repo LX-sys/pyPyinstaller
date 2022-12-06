@@ -1292,6 +1292,11 @@ background-image:url(image/appimage/python-local-55.png);
         # 检测gcc(这个仅对Nuitka有效)
         if pageWay == "Nuitka":
             cmd = "gcc --version"
+
+            # 这个是 MinGW64 的环境变量
+            if is_system_win:
+                os.environ["PATH"] = r"D:\mingw64\bin"
+
             try:
                 gcc_v = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True, stderr=subprocess.STDOUT)
                 version = gcc_v.stdout.read().decode("utf8")
@@ -1307,7 +1312,7 @@ background-image:url(image/appimage/python-local-55.png);
                     self.detection_res = False
 
             if is_system_win:
-                if "COLLECT_GCC" in version:
+                if "gcc" in version:
                     self.outDetection("GCC是否安装:{}".format("已安装"))
                 else:
                     self.outDetection("GCC是否安装(Nuitka的依赖):{}".format("没有安装gcc,请先下载MinGW64"))
@@ -1414,7 +1419,7 @@ background-image:url(image/appimage/python-local-55.png);
                     cmd += " --distpath {0} --specpath {0} --workpath {0}".format(save_out_dir)
                 # if is_system_mac:
                 #     cmd += " --distpath \'{0}\' --specpath \'{0}\' --workpath \'{0}\'".format(save_out_dir)
-            print(cmd)
+            # print(cmd)
             # 管道执行
             sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             self.page_th.setArgs(sub,self.pbar,self.page_btn)

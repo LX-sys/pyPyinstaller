@@ -102,5 +102,6 @@ background-color: rgb(5, 32, 56);
         # 选择最近事件
         self.first_win.sendTexted.connect(self.recently_event)
 
+
         # 打包完成后,触发保存信息
         self.pypyinstaller.pageEnded.connect(self.save_recently_event)
