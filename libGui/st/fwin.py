@@ -355,7 +355,7 @@ font: 12pt "等线";
         self.p_box_vlay.addWidget(self.placeholder_win)
 
         self.addPageWay("Pyinstaller")
-        self.addPageWay("Nuitka")
+        self.addPageWay("Nuitka(未完成)")
 
         self.middle_right = QWidget()  # 中间部分的右侧
         self.middle_right.setObjectName("middle_right")
