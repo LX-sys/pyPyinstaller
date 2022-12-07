@@ -1395,12 +1395,18 @@ background-image:url(image/appimage/python-local-55.png);
                 if is_system_mac:
                     cmd += "'{}'".format(head_file)
 
+            '''
+                如果这里为空,着说明只打包了一个文件，需要去除-p
+            '''
+            if not py_file:
+                cmd = cmd.replace(" -p","")
+
             for path in py_file:
                 if is_system_win:
                     cmd+="{};".format(path)
                 if is_system_mac:
                     cmd += "'{}';".format(path)
-            # print(cmd)
+            print(cmd)
 
             # 指定输出目录
             save_out_dir = self.save_app_dir_show.toPlainText()
