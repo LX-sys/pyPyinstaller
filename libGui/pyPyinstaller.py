@@ -31,7 +31,6 @@ from core.utility import Path,path_to_unified
 from libGui.tree import Tree
 from core.utility import Path,is_system_win,is_system_mac,correctionPath,Mac,Windows
 
-
 # 下载进度线程
 class DownBarThread(QThread):
     #
@@ -527,6 +526,7 @@ background-color:#272727;
 
     # 打开项目目录
     def open_pro_dir_event(self):
+
         directory_path = QFileDialog.getExistingDirectory(self, caption="项目目录")
         if directory_path:
             self.venv_path.clear() # 先清空虚拟环境路径
@@ -633,10 +633,12 @@ background-color:#272727;
 
             pyin = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
             piplist = pyin.communicate()[0].decode("utf-8")
+
             if is_system_win:
                 piplist = piplist.split("\r\n")
             if is_system_mac:
                 piplist = piplist.split("\n")
+
             is_pyinstaller = False
             for module_name in piplist[3:]:
                 if "pyinstaller" in module_name:
@@ -786,6 +788,7 @@ background-color:#c12020;
         self.page_process.moveCursor(self.page_process.textCursor().End)
 
     def myEvent(self):
+
         self.next_p_0.clicked.connect(lambda :self.next_event(1,"next"))
 
         # 第二页 -- 上一步/下一步

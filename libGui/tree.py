@@ -217,10 +217,10 @@ class Tree(QTreeWidget):
         self.itemClicked.connect(self.checkState_event)
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
-    win = Tree()
-    win.show()
-
-    sys.exit(app.exec_())
+# if __name__ == '__main__':
+#     app = QApplication(sys.argv)
+#
+#     win = Tree()
+#     win.show()
+#
+#     sys.exit(app.exec_())

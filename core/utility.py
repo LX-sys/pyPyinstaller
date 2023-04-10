@@ -32,7 +32,6 @@ def path_to_unified(path:str):
             return path.replace(r"\\","\\")
     return path
 
-
 # 修正路径,并返回
 def correctionPath(path:str)->str:
     if is_system_mac:

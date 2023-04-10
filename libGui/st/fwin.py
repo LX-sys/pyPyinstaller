@@ -531,13 +531,17 @@ border-radius:20px;
         # ===
 
         self.in_init()
+
+        # 本地python环境列表
+        self.local_python_paths = QListWidget()
         #===
-        self.myEvent()
+
         # 全局页面索引
         self.PageInfo = 0
-
         self.st_win.setCurrentIndex(0)
         self.exter_info = dict()
+
+        self.myEvent()
 
     # 初始化
     def in_init(self):
@@ -1568,6 +1572,34 @@ background-image:url(image/appimage/python-local-55.png);
         self.home_page.clicked.connect(lambda :self.turn_page_event(direction="home"))
         self.af_btn_4.clicked.connect(lambda: self.turn_page_event(direction="top"))
 
+        # -----------
+        self.local_radio.clicked.connect(self.find_local_python)
+        self.local_python_paths.itemClicked.connect(self.python_path_name)
+
+    def python_path_name(self,item:QListWidgetItem):
+        path = item.text()
+        interpreter_path = correctionPath(path)
+        self.venv_path.setText(interpreter_path)
+        self.local_python_paths.hide()
+
+
+    def find_local_python(self):
+        self.local_python_paths.show()
+        # 尝试寻找本地的python解释器
+        if is_system_win:
+            environmentVariables = os.getenv("Path").split(";")
+            paths = []
+            for path in environmentVariables:
+                if ("python2" in path or "python3" in path ) and "Scripts" not in path:
+                    if "python2" in path:
+                        paths.append(os.path.join(path, "python2.exe"))
+                    else:
+                        paths.append(os.path.join(path, "python.exe"))
+            if paths:
+                self.local_python_paths.clear()
+                self.local_python_paths.addItems(paths)
+        elif is_system_mac:
+            pass
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 

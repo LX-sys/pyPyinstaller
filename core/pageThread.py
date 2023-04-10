@@ -39,8 +39,8 @@ class PageThread(QThread):
         start_time = time.time()
         while self.sub.poll() is None:
             line = self.sub.stdout.readline()
-            line = line.strip().decode("utf-8")
             if line:
+                line = line.strip().decode("utf-8")
                 self.sendPageInfo.emit({"line":line,"bar":self.pbar.value()+1})
 
         self.sendPageInfo.emit({"line": "打包完成", "bar": self.pbar.maximum()})
