@@ -40,8 +40,11 @@ class PageThread(QThread):
         while self.sub.poll() is None:
             line = self.sub.stdout.readline()
             if line:
-                line = line.strip().decode("utf-8")
-                self.sendPageInfo.emit({"line":line,"bar":self.pbar.value()+1})
+                try:
+                    line = line.strip().decode("utf-8",errors="ignore")
+                    self.sendPageInfo.emit({"line":line,"bar":self.pbar.value()+1})
+                except Exception as e:
+                    self.sendPageInfo.emit({"line":str(e),"bar":self.pbar.value()+1})
 
         self.sendPageInfo.emit({"line": "打包完成", "bar": self.pbar.maximum()})
         self.page_btn.setText("完成")
